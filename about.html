@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manvi — About</title>
+<script>
+  // phones get the phone design; narrow or portrait tablets get the stacked layout
+  if (innerWidth < 600) document.documentElement.classList.add('phone');
+  else if (innerWidth < 900 || innerWidth / innerHeight < 0.9) document.documentElement.classList.add('stack');
+  try { if (!sessionStorage.getItem('mb-loaded') || location.search.includes('loader')) document.documentElement.classList.add('loading', 'logo-pending'); }
+  catch (e) { document.documentElement.classList.add('loading', 'logo-pending'); }
+  // arriving from Home via the "Hey → About" transition
+  try { if (sessionStorage.getItem('mb-hey')) { sessionStorage.removeItem('mb-hey'); document.documentElement.classList.add('hold', 'from-hey'); } } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&family=Questrial&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="stage" data-band="205,800" data-page="about">
+
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="">
+    <div class="loader-sq"></div>
+  </div>
+
+  <!-- highlights sit under the text -->
+  <div class="reveal d3">
+    <div class="a hl" style="left:149px;top:615px;width:185px"></div>
+    <div class="a hl" style="left:713px;top:688px;width:123px"></div>
+    <div class="a hl" style="left:855px;top:688px;width:100px"></div>
+    <div class="a hl" style="left:975px;top:688px;width:100px"></div>
+    <div class="a hl" style="left:1095px;top:688px;width:100px"></div>
+    <div class="a hl" style="left:1224px;top:688px;width:100px"></div>
+  </div>
+
+  <!-- header -->
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <nav class="a nav poppins reveal d1 persist">
+    <a href="index.html" data-page>Home</a>
+    <a href="about.html" data-page aria-current="page">About</a>
+    <a href="projects.html" data-page>Projects</a>
+    <span title="Coming soon">Journal</span>
+  </nav>
+
+  <div class="reveal d1 persist" data-grid></div>
+
+  <!-- title -->
+  <h1 class="reveal d2 persist">
+    <img class="a about-logo" src="assets/about-logo.svg" alt="About">
+    <span class="a me raleway-light nowrap">Me</span>
+  </h1>
+  <p class="a about-tag poppins reveal d2">product designer . UX strategist . brand strategist</p>
+
+  <div class="a reveal d3" style="left:679px;top:397px;width:232px;height:173px;background:#457247"></div>
+
+  <!-- achievements -->
+  <div class="a card p3" style="left:1153px;top:457px;width:232.409px;height:144.423px">
+    <div class="a rot" style="inset:0">
+      <div style="width:225.175px;height:120.936px;background:#d83b1a;transform:rotate(-6.06deg) skewX(-2.04deg)"></div>
+    </div>
+    <div class="a" style="left:4px;top:12px;width:223px;height:122px;background:#2d4a9d"></div>
+    <div class="a poppins" style="left:23px;top:23px;font-size:10.496px;color:#dfdede;white-space:pre;line-height:normal">
+      <span class="a nowrap" style="left:0;top:0">Achievements</span>
+      <img class="a" src="assets/icon-award.svg" alt="" style="left:79px;top:2px;width:13.121px;height:13.121px">
+      <span class="a nowrap" style="left:0;top:39px">Academic Excellence Award</span>
+      <span class="a nowrap" style="left:152px;top:39px">| 2025</span>
+      <span class="a nowrap" style="left:0;top:61px">Inter IIT Tech meet 14.0, 2nd</span>
+      <span class="a nowrap" style="left:152px;top:61px">| 2025</span>
+      <span class="a nowrap" style="left:0;top:83px">Best Graduation Award</span>
+      <span class="a nowrap" style="left:152px;top:83px">| 2024</span>
+    </div>
+  </div>
+
+  <!-- resume -->
+  <a class="a resume questrial reveal d3" href="#" aria-label="Download resume">
+    <span class="label">Resume</span>
+    <img src="assets/icon-download.svg" alt="">
+  </a>
+
+  <div class="a bio poppins reveal d3">
+    <p>I'm a designer</p>
+    <p>building flows | strategy | story</p>
+    <p>at the intersection of design, business goals, technology and user needs.</p>
+  </div>
+
+  <p class="a notdesign poppins reveal d3">When I’m  not designing</p>
+  <div class="reveal d3">
+    <p class="a hobby poppins" style="left:725px">Recording life</p>
+    <p class="a hobby poppins" style="left:855px">Editing</p>
+    <p class="a hobby poppins" style="left:975px">Travelling</p>
+    <p class="a hobby poppins" style="left:1095px">Scrolling</p>
+    <p class="a hobby poppins" style="left:1224px">Eating</p>
+  </div>
+
+  <!-- experience -->
+  <div class="a card p2" style="left:909px;top:310px;width:282.88px;height:225.935px">
+    <div class="a rot" style="inset:0">
+      <div style="width:253px;height:181px;background:#f57cc3;transform:rotate(11deg)"></div>
+    </div>
+    <div class="a rot" style="left:46.85px;top:15.21px;width:59.005px;height:26.579px">
+      <p class="poppins small" style="transform:rotate(11deg)">Experience</p>
+    </div>
+    <div class="a rot" style="left:106.11px;top:27.64px;width:15.382px;height:15.382px">
+      <div style="position:relative;width:13.121px;height:13.121px;opacity:.54;transform:rotate(11deg)">
+        <img src="assets/icon-paper.svg" alt="" style="position:absolute;left:1.64px;top:.547px;width:9.84px;height:12.027px">
+      </div>
+    </div>
+    <div class="a rot" style="left:19px;top:48.59px;width:238.413px;height:167.232px">
+      <div class="poppins small" style="font-size:10.5px;transform:rotate(11deg)">
+        <p>HFSS Studio , DOD , IITK May-July 2025</p>
+        <p>Interaction Designer ( Full Time Intership)</p>
+        <p>&#8203;</p>
+        <p>InfoGlyph, Bhopal July 2026</p>
+        <p>UI/UX Designer</p>
+        <p>&#8203;</p>
+        <p>FlamingoLiving , Delhi 2023 Aug-2025 Dec</p>
+        <p>Social Media Manager</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- education -->
+  <div class="a card p1" style="left:650px;top:381px;width:274.105px;height:216.425px">
+    <div class="a rot" style="inset:0">
+      <div style="width:248.417px;height:178.44px;background:#f8d71c;transform:rotate(-9.35deg)"></div>
+    </div>
+    <div class="a rot" style="left:29.73px;top:90.43px;width:163.073px;height:57.567px">
+      <div class="poppins small" style="transform:rotate(-9.35deg)"><p>Indian Institute of Technology, </p><p>Kanpur | Master of Design </p></div>
+    </div>
+    <div class="a rot" style="left:27.46px;top:98.71px;width:26.118px;height:18.7px">
+      <p class="poppins" style="font-size:10.234px;color:#000;opacity:.54;white-space:nowrap;transform:rotate(-9.35deg)">2027</p>
+    </div>
+    <div class="a rot" style="left:35.84px;top:149.47px;width:27.105px;height:18.862px">
+      <p class="poppins" style="font-size:10.234px;color:#000;opacity:.54;white-space:nowrap;transform:rotate(-9.35deg)">2024</p>
+    </div>
+    <div class="a rot" style="left:38.12px;top:132.58px;width:216.356px;height:66.339px">
+      <div class="poppins small" style="transform:rotate(-9.35deg)"><p>National Institute of Fashion Technology, </p><p>Hyderabad | Bachelor of Design </p></div>
+    </div>
+    <div class="a rot" style="left:19.39px;top:41.85px;width:54.895px;height:24.397px">
+      <p class="poppins small" style="transform:rotate(-9.35deg)">Education</p>
+    </div>
+    <div class="a rot" style="left:76.5px;top:39.81px;width:15.078px;height:15.078px">
+      <img src="assets/icon-cap.svg" alt="" style="width:13.121px;height:13.121px;transform:rotate(-9.35deg)">
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="a foot-line reveal d4 persist"></div>
+  <p class="a coord coord-n poppins-light reveal d4 persist">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light reveal d4 persist">80° 13' 58.4789" E</p>
+
+</main>
+<template id="phone-tpl" data-band="90,760">
+  <!-- PHONE (iPhone 16 frames 12–16, 393 × 852) — swapped into .stage by main.js on phones -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="" style="left:80px;top:335px">
+    <div class="loader-sq" style="left:196.5px;top:426px"></div>
+  </div>
+
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <button class="a burger" type="button" aria-label="Open menu" aria-expanded="false"><i></i><i></i><i></i><i></i></button>
+
+  <p class="a poppins reveal d1 ph-tagline">product design . UX strategy . brand strategy</p>
+
+  <div class="reveal d1 persist" data-grid-phone></div>
+
+  <!-- title stays put; everything below it scrolls inside the grid -->
+  <h1 class="reveal d2 persist">
+    <img class="a about-logo" src="assets/phone/about-logo.svg" alt="About" style="left:49px;top:229px;width:108px;height:72px">
+    <span class="a me raleway-light nowrap" style="left:179px;top:279px;transform:translateX(-50%)">Me</span>
+  </h1>
+
+  <div class="a ph-scroller reveal d3" tabindex="0" aria-label="About me — scroll for more">
+    <!-- 1 · bio -->
+    <section class="ph-panel">
+      <div class="a" style="left:9px;top:51px;width:185px;height:17px;background:#fde776"></div>
+      <div class="a poppins" style="left:11px;top:33px;width:284px;font-size:12px;color:#212121;line-height:normal">
+        <p>I'm a designer</p>
+        <p>building flows | strategy | story</p>
+        <p>at the intersection of design, business goals, technology and user needs.</p>
+      </div>
+      <p class="a poppins ph-hint">scroll ↓</p>
+    </section>
+
+    <!-- 2 · education (with the green card behind) -->
+    <section class="ph-panel">
+      <div class="a card" style="left:12px;top:21px;width:274.105px;height:216.425px">
+        <div class="a" style="left:29px;top:16px;width:232px;height:173px;background:#457247"></div>
+        <div class="a rot" style="inset:0">
+          <div style="width:248.417px;height:178.44px;background:#f8d71c;transform:rotate(-9.35deg)"></div>
+        </div>
+        <div class="a rot" style="left:29.73px;top:90.43px;width:163.073px;height:57.567px">
+          <div class="poppins small" style="transform:rotate(-9.35deg)"><p>Indian Institute of Technology, </p><p>Kanpur | Master of Design </p></div>
+        </div>
+        <div class="a rot" style="left:27.46px;top:98.71px;width:26.118px;height:18.7px">
+          <p class="poppins" style="font-size:10.234px;color:#000;opacity:.54;white-space:nowrap;transform:rotate(-9.35deg)">2027</p>
+        </div>
+        <div class="a rot" style="left:35.84px;top:149.47px;width:27.105px;height:18.862px">
+          <p class="poppins" style="font-size:10.234px;color:#000;opacity:.54;white-space:nowrap;transform:rotate(-9.35deg)">2024</p>
+        </div>
+        <div class="a rot" style="left:38.12px;top:132.58px;width:216.356px;height:66.339px">
+          <div class="poppins small" style="transform:rotate(-9.35deg)"><p>National Institute of Fashion Technology, </p><p>Hyderabad | Bachelor of Design </p></div>
+        </div>
+        <div class="a rot" style="left:19.39px;top:41.85px;width:54.895px;height:24.397px">
+          <p class="poppins small" style="transform:rotate(-9.35deg)">Education</p>
+        </div>
+        <div class="a rot" style="left:76.5px;top:39.81px;width:15.078px;height:15.078px">
+          <img src="assets/icon-cap.svg" alt="" style="width:13.121px;height:13.121px;transform:rotate(-9.35deg)">
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · experience -->
+    <section class="ph-panel">
+      <div class="a card" style="left:37.1px;top:43.86px;width:269.055px;height:204.222px">
+        <div class="a rot" style="inset:0">
+          <div style="width:253px;height:181px;background:#f57cc3;transform:rotate(5.5deg)"></div>
+        </div>
+        <div class="a" style="left:0;top:0;width:269px;height:204px;display:flex;align-items:center;justify-content:center">
+          <div style="width:253px;height:181px;position:relative;transform:rotate(5.5deg)">
+            <p class="a poppins small" style="left:15px;top:14px">Experience</p>
+            <img class="a" src="assets/icon-paper.svg" alt="" style="left:77px;top:15px;width:9.84px;height:12.027px;opacity:.54">
+            <div class="a poppins small" style="left:15px;top:40px;font-size:10.5px">
+              <p>HFSS Studio , DOD , IITK May-July 2025</p>
+              <p>Interaction Designer ( Full Time Intership)</p>
+              <p>&#8203;</p>
+              <p>InfoGlyph, Bhopal July 2026</p>
+              <p>UI/UX Designer</p>
+              <p>&#8203;</p>
+              <p>FlamingoLiving , Delhi 2023 Aug-2025 Dec</p>
+              <p>Social Media Manager</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · achievements -->
+    <section class="ph-panel">
+      <div class="a card" style="left:34px;top:49px;width:232.409px;height:144.423px">
+        <div class="a rot" style="inset:0">
+          <div style="width:225.175px;height:120.936px;background:#d83b1a;transform:rotate(-6.06deg) skewX(-2.04deg)"></div>
+        </div>
+        <div class="a" style="left:4px;top:12px;width:223px;height:122px;background:#2d4a9d"></div>
+        <div class="a poppins" style="left:23px;top:23px;font-size:10.496px;color:#dfdede;white-space:pre;line-height:normal">
+          <span class="a nowrap" style="left:0;top:0">Achievements</span>
+          <img class="a" src="assets/icon-award.svg" alt="" style="left:79px;top:2px;width:13.121px;height:13.121px">
+          <span class="a nowrap" style="left:0;top:39px">Academic Excellence Award</span>
+          <span class="a nowrap" style="left:152px;top:39px">| 2025</span>
+          <span class="a nowrap" style="left:0;top:61px">Inter IIT Tech meet 14.0, 2nd</span>
+          <span class="a nowrap" style="left:152px;top:61px">| 2025</span>
+          <span class="a nowrap" style="left:0;top:83px">Best Graduation Award</span>
+          <span class="a nowrap" style="left:152px;top:83px">| 2024</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · when I'm not designing -->
+    <section class="ph-panel">
+      <p class="a poppins" style="left:12px;top:90px;font-size:12px;color:#212121">When I’m  not designing</p>
+      <p class="a poppins ph-chip card" style="left:12px;top:159px;width:123px">Recording life</p>
+      <p class="a poppins ph-chip card" style="left:154px;top:159px">Editing</p>
+      <p class="a poppins ph-chip card" style="left:12px;top:196px">Travelling</p>
+      <p class="a poppins ph-chip card" style="left:132px;top:196px">Scrolling</p>
+      <p class="a poppins ph-chip card" style="left:12px;top:231px">Eating</p>
+    </section>
+  </div>
+
+  <a class="a resume questrial reveal d3" href="#" aria-label="Download resume" style="left:49.31px;top:601.32px;width:99.164px;height:22.477px;border-radius:.441px">
+    <span class="label" style="left:18.69px;top:5.68px;width:47px;font-size:12.34px">Resume</span>
+    <img src="assets/phone/icon-download.svg" alt="" style="left:67.69px;top:5.68px;width:10.845px;height:10.845px">
+  </a>
+
+  <div class="a foot-line persist"></div>
+  <p class="a coord coord-n poppins-light persist">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light persist">80° 13' 58.4789" E</p>
+</template>
+<script src="main.js"></script>
+</body>
+</html>

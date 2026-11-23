@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manvi — Home</title>
+<script>
+  // phones get the phone design; narrow or portrait tablets get the stacked layout
+  if (innerWidth < 600) document.documentElement.classList.add('phone');
+  else if (innerWidth < 900 || innerWidth / innerHeight < 0.9) document.documentElement.classList.add('stack');
+  // play the loader once per visit (add ?loader to the URL to replay it)
+  try { if (!sessionStorage.getItem('mb-loaded') || location.search.includes('loader')) document.documentElement.classList.add('loading', 'logo-pending'); }
+  catch (e) { document.documentElement.classList.add('loading', 'logo-pending'); }
+  // arriving from About via the "ABOUT → Hey" transition
+  try { if (sessionStorage.getItem('mb-yeh')) { sessionStorage.removeItem('mb-yeh'); document.documentElement.classList.add('hold', 'from-about', 'hey-return'); } } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&family=Questrial&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="stage" data-band="205,800" data-page="home">
+
+  <!-- loader: square → colours → grows → logo → flies to corner -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="">
+    <div class="loader-sq"></div>
+  </div>
+
+  <!-- header -->
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <nav class="a nav poppins reveal d1 persist">
+    <a href="index.html" data-page aria-current="page">Home</a>
+    <a href="about.html" data-page>About</a>
+    <a href="projects.html" data-page>Projects</a>
+    <span title="Coming soon">Journal</span>
+  </nav>
+
+  <!-- grid -->
+  <div class="reveal d1 persist" data-grid></div>
+
+  <!-- illustration -->
+  <div class="a yellow-panel reveal d2"></div>
+  <img class="a girl reveal d2" src="assets/girl-sandwich.png" alt="Illustration of Manvi thinking, holding a sandwich">
+
+  <div class="a lamp-scene lit-2 reveal d2">
+    <div class="a red"></div>
+    <img class="a desk" src="assets/desk-scene.png" alt="Illustration of Manvi working at a desk under a lamp" width="332" height="293">
+  </div>
+
+  <div class="reveal d3">
+    <div class="a folder-back"></div>
+    <img class="a folder-tab" src="assets/folder-tab.svg" alt="">
+    <div class="a folder-mid"></div>
+    <div class="a folder-front"></div>
+    <div class="a tag" style="left:386.3px;top:569.39px;background:#f8d71c"></div>
+    <div class="a tag" style="left:386.3px;top:599.13px;background:#e24000"></div>
+    <div class="a tag" style="left:428.13px;top:569.39px;background:#457247"></div>
+    <div class="a tag" style="left:428.13px;top:599.13px;background:#f57cc3"></div>
+    <img class="a photog-a" src="assets/photographer-a.png" alt="Illustration of Manvi with a camera">
+    <img class="a photog-b" src="assets/photographer-b.png" alt="">
+  </div>
+
+  <img class="a lamp-arm lit-3 reveal d2" src="assets/lamp-arm.svg" alt="">
+  <img class="a lamp-light lit-4" src="assets/lamp-light.svg" alt="">
+  <img class="a cable lit-1 reveal d3" src="assets/cable.svg" alt="">
+
+  <!-- work with me switch -->
+  <div class="a plug-tip lit-1 reveal d3"></div>
+  <div class="a switch-nub lit-1 reveal d3"></div>
+  <button class="a wwm questrial lit-1 reveal d3" aria-expanded="false" aria-controls="contact"><span>work with me</span></button>
+  <div class="a plug lit-1 reveal d3"></div>
+
+  <!-- hero text -->
+  <div class="a hi-logo lit-5 reveal d2">
+    <img class="dark" src="assets/hi-logo-dark.svg" alt="">
+    <img class="light" src="assets/hi-logo-light.svg" alt="">
+  </div>
+  <p class="a hi raleway-light nowrap lit-5 reveal d2">Hi!</p>
+  <p class="a its raleway lit-5 reveal d2">IT’S MANVI’S</p>
+  <p class="a way raleway nowrap reveal d2">WAY OF MAKING SENSE OF THINGS</p>
+  <p class="a tagline poppins reveal d2">product design . UX strategy . brand strategy</p>
+
+  <div class="reveal d4">
+    <img class="a dot dot-ring" src="assets/ellipse-ring.svg" alt="" style="left:1021px;top:503px">
+    <img class="a dot dot-ring" src="assets/ellipse-ring.svg" alt="" style="left:1116.875px;top:503px">
+    <img class="a dot dot-ring" src="assets/ellipse-ring.svg" alt="" style="left:1212.75px;top:503px">
+    <img class="a dot dot-ring" src="assets/ellipse-ring.svg" alt="" style="left:1308.626px;top:503px">
+    <img class="a dot" src="assets/ellipse-29.svg" alt="" style="left:1025.319px;top:507.318px;width:77.737px;height:77.737px">
+    <img class="a dot" src="assets/ellipse-28.svg" alt="" style="left:1120.995px;top:507.318px;width:77.737px;height:77.737px">
+    <img class="a dot" src="assets/ellipse-27.svg" alt="" style="left:1217.867px;top:507.318px;width:76.541px;height:77.737px">
+    <img class="a dot" src="assets/ellipse-34.svg" alt="" style="left:1313.543px;top:507.318px;width:76.541px;height:77.737px">
+    <p class="a tap poppins nowrap">Tap to watch</p>
+  </div>
+
+  <!-- footer -->
+  <div class="a foot-line reveal d4 persist"></div>
+  <p class="a coord coord-n poppins-light reveal d4 persist">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light reveal d4 persist">80° 13' 58.4789" E</p>
+
+  <!-- lights out -->
+  <div class="a night" aria-hidden="true"></div>
+
+  <section id="contact" aria-label="Contact">
+    <p class="a lets raleway lit-1 contact">Let’s discuss</p>
+    <div class="socials lit-1 contact c2">
+      <a class="s-ig" href="#" target="_blank" rel="noopener" aria-label="Instagram" style="left:1334px;top:239px;opacity:.89">
+        <img src="assets/icon-insta.svg" alt="" style="position:absolute;left:1.333px;top:1.333px;width:13.333px;height:13.333px">
+      </a>
+      <a class="s-in" href="#" target="_blank" rel="noopener" aria-label="LinkedIn" style="left:1357px;top:239px"><img src="assets/icon-linkedin.svg" alt="" width="16" height="16"></a>
+      <a class="s-mail" href="#" aria-label="Email" style="left:1380px;top:239px"><img src="assets/icon-mail.svg" alt="" width="16" height="16"></a>
+    </div>
+    <div class="a box lit-1 contact c2"></div>
+    <form class="contact-form lit-1 contact c3" autocomplete="off">
+      <div class="a input-line"></div>
+      <input class="a msg" name="message" placeholder="Drop me a text..........." aria-label="Your message">
+      <button class="a send" type="submit" aria-label="Send"><img src="assets/icon-send.svg" alt=""></button>
+    </form>
+  </section>
+
+</main>
+<template id="phone-tpl" data-band="90,760">
+  <!-- PHONE (iPhone 16 frames 10 + 11, 393 × 852) — swapped into .stage by main.js on phones -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="" style="left:80px;top:335px">
+    <div class="loader-sq" style="left:196.5px;top:426px"></div>
+  </div>
+
+  <!-- header -->
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <button class="a burger" type="button" aria-label="Open menu" aria-expanded="false"><i></i><i></i><i></i><i></i></button>
+
+  <p class="a poppins reveal d1 ph-tagline">product design . UX strategy . brand strategy</p>
+
+  <div class="reveal d1 persist" data-grid-phone></div>
+
+  <!-- illustration -->
+  <div class="a reveal d2" style="left:49.18px;top:406.05px;width:102.15px;height:184.557px;background:#f8d71c"></div>
+  <img class="a reveal d2" src="assets/girl-sandwich.png" alt="Illustration of Manvi thinking, holding a sandwich" style="left:20.85px;top:373px;width:108.159px;height:217.605px;object-position:bottom">
+
+  <div class="a lamp-scene lit-2 reveal d2" style="left:159.91px;top:388.02px;width:142.468px;height:125.757px">
+    <div class="a" style="left:0;top:17.99px;width:103.821px;height:92.238px;background:#d83b1a"></div>
+    <img class="a" src="assets/phone/desk-scene.png" alt="Illustration of Manvi working at a desk under a lamp" style="left:0;top:0;width:142.468px;height:125.757px">
+  </div>
+
+  <div class="reveal d3">
+    <div class="a" style="left:159.93px;top:513.92px;width:179.138px;height:76.541px;border-radius:3.46px;background:#233568"></div>
+    <img class="a" src="assets/phone/folder-tab.svg" alt="" style="left:159.94px;top:506.17px;width:107.958px;height:19.146px">
+    <div class="a" style="left:159.93px;top:531.02px;width:179.138px;height:59.441px;border-radius:3.46px;background:#294186"></div>
+    <div class="a" style="left:159.93px;top:544.05px;width:179.138px;height:46.413px;border-radius:3.46px;background:#2d4a9d"></div>
+    <div class="a ph-tag" style="left:286.27px;top:526.94px;background:#f8d71c"></div>
+    <div class="a ph-tag" style="left:286.27px;top:539.7px;background:#e24000"></div>
+    <div class="a ph-tag" style="left:304.22px;top:526.94px;background:#457247"></div>
+    <div class="a ph-tag" style="left:304.22px;top:539.7px;background:#f57cc3"></div>
+    <div class="a ph-rot" style="left:159.26px;top:505px;width:119.73px;height:157.817px">
+      <img src="assets/phone/photographer-a.png" alt="Illustration of Manvi with a camera" style="width:157.153px;height:118.851px;object-position:bottom;transform:rotate(-89.68deg) scaleY(-1)">
+    </div>
+    <div class="a ph-rot" style="left:152.02px;top:581.34px;width:126.538px;height:81.48px">
+      <img src="assets/phone/photographer-b.png" alt="" style="width:80.775px;height:126.087px;object-position:bottom;transform:rotate(-89.68deg) scaleY(-1)">
+    </div>
+  </div>
+
+  <img class="a lamp-arm lit-3 reveal d2" src="assets/phone/lamp-arm.svg" alt="" style="left:163.6px;top:389.75px;width:40.62px;height:49.36px">
+  <img class="a lamp-light lit-4" src="assets/phone/lamp-light.svg" alt="" style="left:189.6px;top:403.6px;width:110.8px;height:96.8px">
+  <img class="a cable lit-1 reveal d3" src="assets/phone/cable.svg" alt="" style="left:19.59px;top:438.53px;width:186.96px;height:174.37px">
+
+  <!-- work with me switch -->
+  <div class="a plug-tip lit-1 reveal d3" style="left:152px;top:610.13px;width:3.526px;height:4.848px"></div>
+  <div class="a switch-nub lit-1 reveal d3" style="left:54.89px;top:597.9px;width:3.434px;height:3.434px"></div>
+  <button class="a wwm questrial lit-1 reveal d3" aria-expanded="false" aria-controls="contact" style="left:49.31px;top:601.32px;width:99.164px;height:22.477px;border-radius:.441px;font-size:10.323px;padding-top:6.1px"><span>work with me</span></button>
+  <div class="a plug lit-1 reveal d3" style="left:148.47px;top:607.93px;width:3.526px;height:9.696px"></div>
+
+  <!-- hero text -->
+  <div class="a hi-logo lit-5 reveal d2" style="left:50px;top:229px;width:36px;height:73px">
+    <img class="dark" src="assets/phone/hi-logo-dark.svg" alt="" style="width:36px;height:73px">
+    <img class="light" src="assets/phone/hi-logo-light.svg" alt="" style="width:36px;height:73px">
+  </div>
+  <p class="a hi raleway-light nowrap lit-5 reveal d2" style="left:106.5px;top:232px;transform:translateX(-50%)">Hi!</p>
+  <p class="a its raleway lit-5 reveal d2" style="left:91px;top:283px;width:145px">IT’S MANVI’S</p>
+  <p class="a raleway nowrap reveal d2" style="left:294px;top:313px;transform:translateX(-100%);font-size:12px;color:#5f5f5e">WAY OF MAKING SENSE OF THINGS</p>
+
+  <div class="reveal d4">
+    <img class="a dot" src="assets/phone/ellipse-ring.svg" alt="" style="left:41px;top:671px;width:70.901px;height:70.901px">
+    <img class="a dot" src="assets/phone/ellipse-ring.svg" alt="" style="left:119.7px;top:671px;width:70.901px;height:70.901px">
+    <img class="a dot" src="assets/phone/ellipse-ring.svg" alt="" style="left:198.4px;top:671px;width:70.901px;height:70.901px">
+    <img class="a dot" src="assets/phone/ellipse-ring.svg" alt="" style="left:277.1px;top:671px;width:70.901px;height:70.901px">
+    <img class="a dot" src="assets/phone/ellipse-red.svg" alt="" style="left:44.55px;top:674.54px;width:63.811px;height:63.811px">
+    <img class="a dot" src="assets/phone/ellipse-green.svg" alt="" style="left:123.08px;top:674.54px;width:63.811px;height:63.811px">
+    <img class="a dot" src="assets/phone/ellipse-yellow.svg" alt="" style="left:202.6px;top:674.54px;width:62.829px;height:63.811px">
+    <img class="a dot" src="assets/phone/ellipse-pink.svg" alt="" style="left:281.14px;top:674.54px;width:62.829px;height:63.811px">
+    <p class="a poppins nowrap" style="left:269px;top:750px;font-size:12px;color:#7e7d7d">Tap to watch</p>
+  </div>
+
+  <!-- footer -->
+  <div class="a foot-line persist"></div>
+  <p class="a coord coord-n poppins-light persist">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light persist">80° 13' 58.4789" E</p>
+
+  <!-- lights out -->
+  <div class="a night" aria-hidden="true"></div>
+  <section id="contact" aria-label="Contact">
+    <div class="a box lit-1 contact" style="left:49px;top:641px;width:289px;height:91px"></div>
+    <form class="contact-form lit-1 contact c2" autocomplete="off">
+      <div class="a input-line" style="left:55px;top:709.75px;width:276.297px;height:.5px"></div>
+      <input class="a msg" name="message" placeholder="Drop me a text..........." aria-label="Your message" style="left:55px;top:711px;width:250px;height:17px;line-height:17px">
+      <button class="a send" type="submit" aria-label="Send" style="left:310.6px;top:708px"><img src="assets/phone/icon-send.svg" alt="" style="width:12.178px;height:12.178px"></button>
+    </form>
+  </section>
+</template>
+<script src="main.js"></script>
+</body>
+</html>

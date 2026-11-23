@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manvi — Projects</title>
+<script>
+  // phones get the phone design; narrow or portrait tablets get the stacked layout
+  if (innerWidth < 600) document.documentElement.classList.add('phone');
+  else if (innerWidth < 900 || innerWidth / innerHeight < 0.9) document.documentElement.classList.add('stack');
+  try { if (!sessionStorage.getItem('mb-loaded') || location.search.includes('loader')) document.documentElement.classList.add('loading', 'logo-pending'); }
+  catch (e) { document.documentElement.classList.add('loading', 'logo-pending'); }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&family=Questrial&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="stage" data-band="145,855" data-page="projects">
+
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="">
+    <div class="loader-sq"></div>
+  </div>
+
+  <!-- header -->
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <nav class="a nav poppins reveal d1">
+    <a href="index.html" data-page>Home</a>
+    <a href="about.html" data-page>About</a>
+    <a href="projects.html" data-page aria-current="page">Projects</a>
+    <span title="Coming soon">Journal</span>
+  </nav>
+
+  <h1 class="a proj-title raleway nowrap reveal d2">Projects</h1>
+  <div class="reveal d2" role="group" aria-label="Filter projects">
+    <button class="a pill poppins" style="left:815px;width:71px" data-cat="all" aria-pressed="true">All</button>
+    <button class="a pill poppins" style="left:898px;width:169px" data-cat="product" aria-pressed="false">Product</button>
+    <button class="a pill poppins" style="left:1079px;width:170px" data-cat="strategy" aria-pressed="false">Strategy</button>
+    <button class="a pill poppins" style="left:1261px;width:169px" data-cat="experiment" aria-pressed="false">Experiment</button>
+  </div>
+
+  <!-- data-cat comes from the comments on each card in Figma -->
+  <a class="a project poppins" href="projects/book-my-show.html" data-page data-cat="product">
+    <span class="swatch" style="background:#d83b1a"></span><span class="name">Book My show</span>
+  </a>
+  <a class="a project poppins" href="projects/rerouting-devotion.html" data-page data-cat="strategy">
+    <span class="swatch" style="background:#457247"></span><span class="name">Rerouting devotion-RSD</span>
+  </a>
+  <a class="a project poppins" href="projects/designed-economics.html" data-page data-cat="strategy">
+    <span class="swatch" style="background:#f57cc3"></span><span class="name">Designed Economics</span>
+  </a>
+  <a class="a project poppins" href="projects/anugroove.html" data-page data-cat="experiment">
+    <span class="swatch" style="background:#455893"></span><span class="name">Anugroove</span>
+  </a>
+  <a class="a project poppins" href="projects/water-monitoring.html" data-page data-cat="product">
+    <span class="swatch" style="background:#fba738"></span><span class="name">Water Monitoring</span>
+  </a>
+  <a class="a project poppins" href="projects/teerth-sathi.html" data-page data-cat="product">
+    <span class="swatch" style="background:#f8d71c"></span><span class="name">Teerth Sathi</span>
+  </a>
+
+  <!-- footer -->
+  <div class="a foot-line reveal d4"></div>
+  <p class="a coord coord-n poppins-light reveal d4">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light reveal d4">80° 13' 58.4789" E</p>
+
+</main>
+<template id="phone-tpl" data-band="90,795">
+  <!-- PHONE projects (no phone frame in Figma yet — same style, projects in a scrolling list) -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader-bg"></div>
+    <img class="loader-logo" src="assets/logo-large.svg" alt="" style="left:80px;top:335px">
+    <div class="loader-sq" style="left:196.5px;top:426px"></div>
+  </div>
+
+  <div class="a header-line"></div>
+  <a class="a brand" href="index.html" data-page aria-label="Home"><img src="assets/logo-small.svg" alt="Manvi logo"></a>
+  <button class="a burger" type="button" aria-label="Open menu" aria-expanded="false"><i></i><i></i><i></i><i></i></button>
+
+  <h1 class="a raleway nowrap reveal d1" style="left:45.5px;top:96px;font-size:24px;font-weight:400;color:#212121">Projects</h1>
+  <div class="reveal d2" role="group" aria-label="Filter projects">
+    <button class="a pill poppins ph-pill" style="left:45.5px;width:40px" data-cat="all" aria-pressed="true">All</button>
+    <button class="a pill poppins ph-pill" style="left:93.5px;width:72px" data-cat="product" aria-pressed="false">Product</button>
+    <button class="a pill poppins ph-pill" style="left:173.5px;width:72px" data-cat="strategy" aria-pressed="false">Strategy</button>
+    <button class="a pill poppins ph-pill" style="left:253.5px;width:94px" data-cat="experiment" aria-pressed="false">Experiment</button>
+  </div>
+
+  <div class="a ph-list reveal d3" tabindex="0" aria-label="Projects — scroll for more">
+    <a class="project poppins" href="projects/book-my-show.html" data-page data-cat="product">
+      <span class="swatch" style="background:#d83b1a"></span><span class="name">Book My show</span>
+    </a>
+    <a class="project poppins" href="projects/rerouting-devotion.html" data-page data-cat="strategy">
+      <span class="swatch" style="background:#457247"></span><span class="name">Rerouting devotion-RSD</span>
+    </a>
+    <a class="project poppins" href="projects/designed-economics.html" data-page data-cat="strategy">
+      <span class="swatch" style="background:#f57cc3"></span><span class="name">Designed Economics</span>
+    </a>
+    <a class="project poppins" href="projects/anugroove.html" data-page data-cat="experiment">
+      <span class="swatch" style="background:#455893"></span><span class="name">Anugroove</span>
+    </a>
+    <a class="project poppins" href="projects/water-monitoring.html" data-page data-cat="product">
+      <span class="swatch" style="background:#fba738"></span><span class="name">Water Monitoring</span>
+    </a>
+    <a class="project poppins" href="projects/teerth-sathi.html" data-page data-cat="product">
+      <span class="swatch" style="background:#f8d71c"></span><span class="name">Teerth Sathi</span>
+    </a>
+  </div>
+
+  <div class="a foot-line persist"></div>
+  <p class="a coord coord-n poppins-light persist">26° 30' 47.3519" N</p>
+  <p class="a coord coord-e poppins-light persist">80° 13' 58.4789" E</p>
+</template>
+<script src="main.js"></script>
+</body>
+</html>
