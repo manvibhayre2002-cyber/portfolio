@@ -234,9 +234,10 @@ if (PHONE) {
 
 /* ---------- phone grid (iPhone frames: 289 × 362 at 49,228) ---------- */
 document.querySelectorAll('[data-grid-phone]').forEach((g) => {
-  let html = '<div class="a grid-frame" style="left:49px;top:228px;width:289px;height:362px"></div>';
-  for (let i = 0; i < 8; i++) html += `<div class="a grid-v" style="left:${85.87 + 36.033 * i}px;top:228.84px;height:360.324px"></div>`;
-  for (let j = 0; j < 9; j++) html += `<div class="a grid-h" style="left:49px;top:${266 + 36 * j}px;width:289px"></div>`;
+  const y = parseFloat(g.dataset.gridPhone) || 228;   // home sits higher (190) than About (228)
+  let html = `<div class="a grid-frame" style="left:49px;top:${y}px;width:289px;height:362px"></div>`;
+  for (let i = 0; i < 7; i++) html += `<div class="a grid-v" style="left:${85.87 + 36.033 * i}px;top:${y + 0.84}px;height:360.324px"></div>`; // 8th line = frame edge
+  for (let j = 0; j < 9; j++) html += `<div class="a grid-h" style="left:49px;top:${y + 38 + 36 * j}px;width:289px"></div>`;
   g.innerHTML = html;
 });
 
@@ -570,6 +571,13 @@ const PROJECTS = {
   function open(key, btn) {
     const P = PROJECTS[key];
     const swap = cur && cur !== key;
+    if (PHONE) {   // from the header line down to just above the circles (Figma: iPhone 16 - 17 / 16 - 10)
+      const s = parseFloat(getComputedStyle(root).getPropertyValue('--s')) || 1;
+      const hb = document.querySelector('.header-line').getBoundingClientRect().bottom;
+      const top = (hb - stageEl.getBoundingClientRect().top) / s;
+      pp.style.top = `${top}px`;
+      pp.style.height = `${638 - top}px`;
+    }
     const fill = () => {
       pp.style.setProperty('--pp', P.color);
       pp.style.setProperty('--pp-ink', P.ink);
@@ -586,6 +594,11 @@ const PROJECTS = {
       if (!PHONE && !STACK) {
         let fs = 23.5;
         while (d.scrollWidth > d.clientWidth + 1 && fs > 17) { fs -= 0.5; d.style.fontSize = fs + 'px'; }
+      }
+      // phone: long one-liners step down until they end inside the window (never cut off at the bottom)
+      if (PHONE) {
+        let fs = 23.5;
+        while (d.offsetTop + d.offsetHeight > pp.clientHeight - 18 && fs > 15) { fs -= 0.5; d.style.fontSize = fs + 'px'; }
       }
     };
     if (swap) { pp.classList.add('swap'); setTimeout(() => { fill(); pp.classList.remove('swap'); }, 160); }
