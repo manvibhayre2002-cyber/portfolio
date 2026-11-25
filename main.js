@@ -5,7 +5,6 @@ const CONTACT = {
   email: 'manvibhayre24@gmail.com',   // only behind the mail icon — chat messages never go to email
   linkedin: 'https://in.linkedin.com/in/manvi-bhayre-82b180273',
   instagram: 'https://www.instagram.com/manviebhayre',
-  chatEndpoint: '',                   // where chat messages are delivered privately (not set up yet)
 };
 
 const PALETTE = ['#f8d71c', '#e24000', '#457247', '#f57cc3', '#2d4a9d', '#d83b1a', '#fba738'];
@@ -449,25 +448,60 @@ if (wwm) {
   set('.s-ig', CONTACT.instagram);
   set('.s-mail', `mailto:${CONTACT.email}`);
 
-  /* chat: a sent message posts above the input like a chat bubble. Only this visitor sees
-     their own thread (kept in this browser); delivery to Manvi goes to CONTACT.chatEndpoint. */
+  /* chat: messages go to Manvi's private inbox (/api/chat) and her replies come back here.
+     Each visitor gets a random id kept in their browser, so they only ever see their own thread.
+     If the server isn't reachable, the message still shows locally, marked "not delivered yet". */
   const form = document.querySelector('.contact-form');
   const thread = document.querySelector('.chat-thread');
   const KEY = 'mb-chat';
+  const cid = (() => {
+    let id = ''; try { id = localStorage.getItem('mb-cid') || ''; } catch (_) {}
+    if (!/^[a-z0-9]{16,40}$/i.test(id)) {
+      const b = new Uint8Array(12); crypto.getRandomValues(b);
+      id = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+      try { localStorage.setItem('mb-cid', id); } catch (_) {}
+    }
+    return id;
+  })();
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
-  const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(-30))); } catch (e) {} };
+  const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(-60))); } catch (e) {} };
   const bubble = (m, fresh) => {
-    if (!thread) return;
+    if (!thread) return null;
     const b = document.createElement('div');
-    b.className = 'chat-msg' + (fresh ? ' new' : '');
+    b.className = 'chat-msg' + (m.from === 'manvi' ? ' from-manvi' : '') + (fresh ? ' new' : '');
     const t = document.createElement('p'); t.textContent = m.text;
-    const st = document.createElement('span'); st.className = 'chat-st'; st.textContent = m.status || '';
+    const st = document.createElement('span'); st.className = 'chat-st';
+    st.textContent = m.from === 'manvi' ? 'Manvi' : (m.status || '');
     b.append(t, st);
     thread.appendChild(b);
     thread.scrollTop = thread.scrollHeight;
     return st;
   };
-  load().forEach((m) => bubble(m));
+  const render = (list) => { if (!thread) return; thread.textContent = ''; list.forEach((m) => bubble(m)); };
+  render(load());
+
+  // pull the thread from the server (adds Manvi's replies); keeps local-only messages that never got through
+  let syncing = false;
+  async function sync() {
+    if (syncing || !thread) return; syncing = true;
+    try {
+      const r = await fetch(`/api/chat?cid=${cid}`, { cache: 'no-store' });
+      if (!r.ok) return;
+      const { messages } = await r.json();
+      const local = load().filter((m) => m.status && m.status !== 'sent ✓');
+      const merged = [...messages.map((m) => (m.from === 'visitor' ? { ...m, status: 'sent ✓' } : m)), ...local];
+      const before = JSON.stringify(load());
+      save(merged);
+      if (JSON.stringify(merged.slice(-60)) !== before) render(merged);
+    } catch (_) {} finally { syncing = false; }
+  }
+  let poll = null;
+  new MutationObserver(() => {                       // while the chat is open, check for replies
+    const on = root.classList.contains('talk');
+    if (on && !poll) { sync(); poll = setInterval(() => { if (!document.hidden) sync(); }, 8000); }
+    if (!on && poll) { clearInterval(poll); poll = null; }
+  }).observe(root, { attributes: true, attributeFilter: ['class'] });
+
   form && form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = msg.value.trim();
@@ -476,18 +510,15 @@ if (wwm) {
     send.classList.add('sent');
     setTimeout(() => send.classList.remove('sent'), 600);
     msg.value = '';
-    const m = { text, at: Date.now(), status: 'sending…' };
+    const m = { from: 'visitor', text, at: Date.now(), status: 'sending…' };
     const st = bubble(m, true);
-    const list = load(); list.push(m);
-    let status = 'not delivered yet';
-    if (CONTACT.chatEndpoint) {
-      try {
-        const r = await fetch(CONTACT.chatEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, at: m.at }) });
-        status = r.ok ? 'sent ✓' : 'couldn’t send — try again';
-      } catch (err) { status = 'couldn’t send — try again'; }
-    }
+    let status;
+    try {
+      const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cid, text, hp: '' }) });
+      status = r.ok ? 'sent ✓' : r.status === 429 ? 'too many messages — try in a bit' : (r.status === 404 || r.status === 503) ? 'not delivered yet' : 'couldn’t send — try again';
+    } catch (err) { status = 'couldn’t send — try again'; }
     m.status = status; if (st) st.textContent = status;
-    save(list);
+    const list = load(); list.push(m); save(list);
   });
 }
 

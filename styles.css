@@ -982,3 +982,6 @@ html.stack .pp-desc { grid-column: 1 / -1; font-size: clamp(18px, 3.2vw, 24px); 
 .hobby-loop.ph-hobby { left: 12px; top: 212px; width: 300px; }
 /* phone projects: 1px of room around the list so the cards' hairline borders aren't clipped at its edges */
 .ph-list { box-sizing: content-box; padding: 1px; margin: -1px 0 0 -1px; }
+/* chat: Manvi's replies sit on the left in white-on-ink */
+.chat-thread .chat-msg.from-manvi { align-self: flex-start; align-items: flex-start; }
+.chat-thread .chat-msg.from-manvi p { background: #212121; color: #f3f3f1; border-radius: 10px 10px 10px 2px; }
