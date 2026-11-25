@@ -40,5 +40,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/inbox",
+      "destination": "/inbox.html"
+    }
   ]
 }
