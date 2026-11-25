@@ -1,50 +1,69 @@
-// Visitor side of the "Work with me" chat.
-//   POST /api/chat  { cid, text, hp }  -> saves the message for Manvi
-//   GET  /api/chat?cid=...              -> this visitor's own thread (with Manvi's replies)
-// Each visitor only ever reads their own conversation; the id is random and lives in their browser.
-const crypto = require('crypto');
-const { configured, pipeline, CID, MAX_THREAD, clean, parse, send } = require('./_store');
+// "Work with me" chat → email to Manvi.
+//   POST /api/chat  { name, contact, text, hp }
+// Sends the message through Resend (https://resend.com) using RESEND_API_KEY, set in the
+// Vercel project's environment variables. If the visitor left an email, it becomes the
+// Reply-To, so replying in Gmail goes straight to them. Nothing is stored on the site.
+const TO = process.env.CONTACT_TO || 'mbdesignstudio02@gmail.com';
+const FROM = process.env.CONTACT_FROM || 'Portfolio chat <onboarding@resend.dev>';
+
+const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+const isPhone = (v) => v.replace(/\D/g, '').length >= 7 && /^[+\d\s().-]+$/.test(v);
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// light, per-instance rate limit: 8 messages / 10 min per network (kept in memory only, never stored)
+const hits = new Map();
+function limited(ip) {
+  const now = Date.now(), win = 10 * 60 * 1000;
+  const list = (hits.get(ip) || []).filter((t) => now - t < win);
+  list.push(now); hits.set(ip, list);
+  if (hits.size > 5000) hits.clear();
+  return list.length > 8;
+}
+
+function reply(res, status, body) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(status).json(body);
+}
 
 module.exports = async (req, res) => {
-  if (!configured()) return send(res, 503, { error: 'not set up' });
-  const cid = String((req.method === 'GET' ? req.query.cid : req.body && req.body.cid) || '');
-  if (!CID.test(cid)) return send(res, 400, { error: 'bad id' });
-  const key = `chat:${cid}`;
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return reply(res, 405, { error: 'method' }); }
+  if (!process.env.RESEND_API_KEY) return reply(res, 503, { error: 'email not set up' });
+
+  const b = req.body || {};
+  if (b.hp) return reply(res, 200, { ok: true });                      // hidden field filled = bot
+  const name = String(b.name || '').trim().slice(0, 80);
+  const contact = String(b.contact || '').trim().slice(0, 120);
+  const text = String(b.text || '').trim().slice(0, 1500);
+  if (name.length < 2 || !text || !(isEmail(contact) || isPhone(contact))) return reply(res, 400, { error: 'missing details' });
+
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  if (limited(ip)) return reply(res, 429, { error: 'slow down' });
+
+  const when = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+  const email = isEmail(contact) ? contact : null;
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#212121;line-height:1.5">
+    <p style="margin:0 0 4px"><b>${esc(name)}</b></p>
+    <p style="margin:0 0 16px;color:#666">${email ? 'Email' : 'Phone'}: ${esc(contact)} · ${esc(when)}</p>
+    <div style="padding:14px 16px;background:#f3f3f1;border-left:3px solid #e24000;white-space:pre-wrap">${esc(text)}</div>
+    <p style="margin:16px 0 0;color:#999;font-size:12px">Sent from the "Work with me" chat on manvibhayre.com${email ? ' — just hit Reply to answer them.' : '.'}</p>
+  </div>`;
 
   try {
-    if (req.method === 'GET') {
-      const [list] = await pipeline([['LRANGE', key, '0', '-1']]);
-      return send(res, 200, { messages: parse(list) });
-    }
-
-    if (req.method === 'POST') {
-      const body = req.body || {};
-      if (body.hp) return send(res, 200, { ok: true });            // honeypot field filled = bot
-      const text = clean(body.text);
-      if (!text.trim()) return send(res, 400, { error: 'empty' });
-
-      // light rate limits: 20 messages / hour per conversation, 40 / hour per network (hashed, never stored raw)
-      const hour = Math.floor(Date.now() / 3.6e6);
-      const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-      const ipKey = `rl:ip:${crypto.createHash('sha256').update(ip + hour).digest('hex').slice(0, 16)}`;
-      const cidKey = `rl:c:${cid}:${hour}`;
-      const [nC, , nI] = await pipeline([['INCR', cidKey], ['EXPIRE', cidKey, '3700'], ['INCR', ipKey], ['EXPIRE', ipKey, '3700']]);
-      if (nC > 20 || nI > 40) return send(res, 429, { error: 'slow down' });
-
-      const at = Date.now();
-      const msg = JSON.stringify({ from: 'visitor', text, at });
-      await pipeline([
-        ['RPUSH', key, msg],
-        ['LTRIM', key, String(-MAX_THREAD), '-1'],
-        ['ZADD', 'chats', String(at), cid],                       // inbox order: latest activity first
-        ['HINCRBY', 'unread', cid, '1'],
-      ]);
-      return send(res, 200, { ok: true, at });
-    }
-
-    res.setHeader('Allow', 'GET, POST');
-    return send(res, 405, { error: 'method' });
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: FROM,
+        to: [TO],
+        subject: `New message from ${name}`,
+        ...(email ? { reply_to: email } : {}),
+        text: `${name}\n${email ? 'Email' : 'Phone'}: ${contact}\n${when}\n\n${text}`,
+        html,
+      }),
+    });
+    if (!r.ok) return reply(res, 502, { error: 'email failed' });
+    return reply(res, 200, { ok: true });
   } catch (e) {
-    return send(res, 500, { error: 'store error' });
+    return reply(res, 502, { error: 'email failed' });
   }
 };

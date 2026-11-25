@@ -903,7 +903,7 @@ html.map-open, html.map-open body { overflow: hidden; }
 
 /* ---------- home: chat inside the message box ---------- */
 .chat-thread {
-  left: 923px; top: 271px; width: 462px; height: 116px; overflow-y: auto; scrollbar-width: none;
+  left: 923px; top: 300px; width: 462px; height: 88px; overflow-y: auto; scrollbar-width: none;
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 4px 0;
 }
 .chat-thread::-webkit-scrollbar { display: none; }
@@ -985,3 +985,19 @@ html.stack .pp-desc { grid-column: 1 / -1; font-size: clamp(18px, 3.2vw, 24px); 
 /* chat: Manvi's replies sit on the left in white-on-ink */
 .chat-thread .chat-msg.from-manvi { align-self: flex-start; align-items: flex-start; }
 .chat-thread .chat-msg.from-manvi p { background: #212121; color: #f3f3f1; border-radius: 10px 10px 10px 2px; }
+
+/* chat: who's writing — asked once, then remembered and shown as one line */
+.chat-who { left: 923px; top: 272px; width: 462px; height: 22px; display: flex; gap: 14px; pointer-events: none; }
+html.talk .chat-who { pointer-events: auto; }
+.chat-who input {
+  flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: .5px solid rgba(237, 237, 237, .55); outline: 0;
+  font: 12px/18px 'Raleway', sans-serif; color: #ededed; padding: 0 0 2px;
+}
+.chat-who input::placeholder { color: #ededed; opacity: .75; }
+.chat-who input:focus { border-bottom-color: #ededed; }
+.chat-who input.bad { border-bottom-color: #fde776; }
+.chat-who .who-line { display: none; margin: 0; font: 11px/18px 'Poppins', sans-serif; color: #ededed; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-who .who-edit { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+.chat-who.set input { display: none; }
+.chat-who.set .who-line { display: block; }
+.chat-who.ph-who { gap: 10px; }

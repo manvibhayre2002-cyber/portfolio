@@ -448,75 +448,73 @@ if (wwm) {
   set('.s-ig', CONTACT.instagram);
   set('.s-mail', `mailto:${CONTACT.email}`);
 
-  /* chat: messages go to Manvi's private inbox (/api/chat) and her replies come back here.
-     Each visitor gets a random id kept in their browser, so they only ever see their own thread.
-     If the server isn't reachable, the message still shows locally, marked "not delivered yet". */
+  /* chat: the visitor leaves their name + email/phone once, then each message is emailed to Manvi
+     (/api/chat → Resend). Their own mail app never opens; Manvi replies from her inbox.
+     The thread and details are remembered on this device only. */
   const form = document.querySelector('.contact-form');
   const thread = document.querySelector('.chat-thread');
-  const KEY = 'mb-chat';
-  const cid = (() => {
-    let id = ''; try { id = localStorage.getItem('mb-cid') || ''; } catch (_) {}
-    if (!/^[a-z0-9]{16,40}$/i.test(id)) {
-      const b = new Uint8Array(12); crypto.getRandomValues(b);
-      id = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
-      try { localStorage.setItem('mb-cid', id); } catch (_) {}
-    }
-    return id;
-  })();
+  const who = document.querySelector('.chat-who');
+  const KEY = 'mb-chat', WHO = 'mb-who';
+  const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.hostname.endsWith('.localhost');
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
-  const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(-60))); } catch (e) {} };
+  const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(-40))); } catch (e) {} };
+  const getWho = () => { try { return JSON.parse(localStorage.getItem(WHO)) || null; } catch (e) { return null; } };
+  const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  const isPhone = (v) => (v.replace(/\D/g, '').length >= 7) && /^[+\d\s().-]+$/.test(v);
   const bubble = (m, fresh) => {
     if (!thread) return null;
     const b = document.createElement('div');
-    b.className = 'chat-msg' + (m.from === 'manvi' ? ' from-manvi' : '') + (fresh ? ' new' : '');
+    b.className = 'chat-msg' + (fresh ? ' new' : '');
     const t = document.createElement('p'); t.textContent = m.text;
-    const st = document.createElement('span'); st.className = 'chat-st';
-    st.textContent = m.from === 'manvi' ? 'Manvi' : (m.status || '');
+    const st = document.createElement('span'); st.className = 'chat-st'; st.textContent = m.status || '';
     b.append(t, st);
     thread.appendChild(b);
     thread.scrollTop = thread.scrollHeight;
     return st;
   };
-  const render = (list) => { if (!thread) return; thread.textContent = ''; list.forEach((m) => bubble(m)); };
-  render(load());
+  load().forEach((m) => bubble(m));
 
-  // pull the thread from the server (adds Manvi's replies); keeps local-only messages that never got through
-  let syncing = false;
-  async function sync() {
-    if (syncing || !thread) return; syncing = true;
-    try {
-      const r = await fetch(`/api/chat?cid=${cid}`, { cache: 'no-store' });
-      if (!r.ok) return;
-      const { messages } = await r.json();
-      const local = load().filter((m) => m.status && m.status !== 'sent ✓');
-      const merged = [...messages.map((m) => (m.from === 'visitor' ? { ...m, status: 'sent ✓' } : m)), ...local];
-      const before = JSON.stringify(load());
-      save(merged);
-      if (JSON.stringify(merged.slice(-60)) !== before) render(merged);
-    } catch (_) {} finally { syncing = false; }
+  const nameIn = who && who.querySelector('.who-name');
+  const contactIn = who && who.querySelector('.who-contact');
+  function showWho(w) {
+    if (!who) return;
+    if (w) {
+      who.querySelector('.who-text').textContent = `${w.name} · ${w.contact}`;
+      nameIn.value = w.name; contactIn.value = w.contact;
+      who.classList.add('set');
+    } else who.classList.remove('set');
   }
-  let poll = null;
-  new MutationObserver(() => {                       // while the chat is open, check for replies
-    const on = root.classList.contains('talk');
-    if (on && !poll) { sync(); poll = setInterval(() => { if (!document.hidden) sync(); }, 8000); }
-    if (!on && poll) { clearInterval(poll); poll = null; }
-  }).observe(root, { attributes: true, attributeFilter: ['class'] });
+  showWho(getWho());
+  who && who.querySelector('.who-edit').addEventListener('click', () => { who.classList.remove('set'); nameIn.focus(); });
+  [nameIn, contactIn].forEach((el) => el && el.addEventListener('input', () => el.classList.remove('bad')));
 
   form && form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = msg.value.trim();
     if (!text) { msg.focus(); return; }
+    // who's writing: required once, so Manvi knows who it is and can reply
+    const name = (nameIn ? nameIn.value : '').trim();
+    const contact = (contactIn ? contactIn.value : '').trim();
+    if (name.length < 2) { nameIn && (nameIn.classList.add('bad'), who.classList.remove('set'), nameIn.focus()); return; }
+    if (!isEmail(contact) && !isPhone(contact)) { contactIn && (contactIn.classList.add('bad'), who.classList.remove('set'), contactIn.focus()); return; }
+    const w = { name, contact };
+    try { localStorage.setItem(WHO, JSON.stringify(w)); } catch (_) {}
+    showWho(w);
+
     const send = form.querySelector('.send');
     send.classList.add('sent');
     setTimeout(() => send.classList.remove('sent'), 600);
     msg.value = '';
-    const m = { from: 'visitor', text, at: Date.now(), status: 'sending…' };
+    const m = { text, at: Date.now(), status: 'sending…' };
     const st = bubble(m, true);
     let status;
-    try {
-      const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cid, text, hp: '' }) });
-      status = r.ok ? 'sent ✓' : r.status === 429 ? 'too many messages — try in a bit' : (r.status === 404 || r.status === 503) ? 'not delivered yet' : 'couldn’t send — try again';
-    } catch (err) { status = 'couldn’t send — try again'; }
+    if (LOCAL) status = 'preview — not actually sent';
+    else {
+      try {
+        const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text, hp: '' }) });
+        status = r.ok ? 'sent ✓' : r.status === 429 ? 'too many messages — try in a bit' : r.status === 503 ? 'not delivered yet' : 'couldn’t send — try again';
+      } catch (err) { status = 'couldn’t send — try again'; }
+    }
     m.status = status; if (st) st.textContent = status;
     const list = load(); list.push(m); save(list);
   });

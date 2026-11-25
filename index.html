@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&family=Questrial&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=84f4e179">
+<link rel="stylesheet" href="styles.css?v=28509114">
 </head>
 <body>
 <main class="stage" data-band="205,800" data-page="home">
@@ -123,6 +123,11 @@
       <a class="s-mail" href="#" aria-label="Email" style="left:1380px;top:239px"><img src="assets/icon-mail.svg" alt="" width="16" height="16"></a>
     </div>
     <div class="a box lit-1 contact c2"></div>
+    <div class="a chat-who lit-1 contact c3">
+      <input class="who-name" name="name" placeholder="Your name" autocomplete="name" maxlength="80" aria-label="Your name">
+      <input class="who-contact" name="contact" placeholder="Email or phone" autocomplete="email" maxlength="120" aria-label="Your email or phone">
+      <p class="who-line"><span class="who-text"></span> <button type="button" class="who-edit">change</button></p>
+    </div>
     <div class="a chat-thread lit-1 contact c3" aria-live="polite" aria-label="Your messages"></div>
     <form class="contact-form lit-1 contact c3" autocomplete="off">
       <div class="a input-line"></div>
@@ -226,7 +231,12 @@
       <a class="s-mail" href="#" aria-label="Email" style="left:322px;top:575px;opacity:.89"><img src="assets/icon-mail.svg" alt="" width="16" height="16"></a>
     </div>
     <div class="a box lit-1 contact" style="left:49px;top:641px;width:289px;height:135px"></div>
-    <div class="a chat-thread lit-1 contact c2" aria-live="polite" aria-label="Your messages" style="left:55px;top:647px;width:276px;height:92px"></div>
+    <div class="a chat-who lit-1 contact c3 ph-who" style="left:55px;top:648px;width:276px">
+      <input class="who-name" name="name" placeholder="Your name" autocomplete="name" maxlength="80" aria-label="Your name">
+      <input class="who-contact" name="contact" placeholder="Email or phone" autocomplete="email" maxlength="120" aria-label="Your email or phone">
+      <p class="who-line"><span class="who-text"></span> <button type="button" class="who-edit">change</button></p>
+    </div>
+    <div class="a chat-thread lit-1 contact c2" aria-live="polite" aria-label="Your messages" style="left:55px;top:672px;width:276px;height:67px"></div>
     <form class="contact-form lit-1 contact c2" autocomplete="off">
       <div class="a input-line" style="left:55px;top:743.36px;width:276.3px;height:.5px"></div>
       <input class="a msg" name="message" placeholder="Drop me a text......." aria-label="Your message" maxlength="600" style="left:58px;top:750px;width:250px;height:18px;line-height:18px">
@@ -234,6 +244,6 @@
     </form>
   </section>
 </template>
-<script src="main.js?v=e46fb2c2"></script>
+<script src="main.js?v=49be58e2"></script>
 </body>
 </html>
