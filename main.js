@@ -2,9 +2,10 @@
 
 /* Fill these in to wire up the contact box. */
 const CONTACT = {
-  email: '',      // e.g. 'you@example.com' — the send arrow opens a pre-filled email to this address
-  linkedin: '#',
-  instagram: '#',
+  email: 'manvibhayre24@gmail.com',   // only behind the mail icon — chat messages never go to email
+  linkedin: 'https://in.linkedin.com/in/manvi-bhayre-82b180273',
+  instagram: 'https://www.instagram.com/manviebhayre',
+  chatEndpoint: '',                   // where chat messages are delivered privately (not set up yet)
 };
 
 const PALETTE = ['#f8d71c', '#e24000', '#457247', '#f57cc3', '#2d4a9d', '#d83b1a', '#fba738'];
@@ -15,6 +16,24 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /* ---------- fit the 1512×982 canvas to the viewport ---------- */
 const stageEl = document.querySelector('.stage');
 const LONG = root.classList.contains('long'); // case studies: fit width, scroll vertically
+
+/* ---------- page readiness: fonts + the images you'll see first ----------
+   The intro loader waits on this (never more than a few seconds), so the page
+   arrives complete instead of images popping in one by one. */
+const imgDone = (im) => (im.complete && im.naturalWidth) ? Promise.resolve() :
+  new Promise((res) => { im.addEventListener('load', res, { once: true }); im.addEventListener('error', res, { once: true }); });
+const PAGE_READY = new Promise((resolve) => {
+  const go = () => {
+    const near = [...document.images].filter((im) => {
+      if (im.loading === 'lazy' && !LONG) return false;
+      const r = im.getBoundingClientRect();
+      return r.top < innerHeight * 1.4 && r.bottom > -50 && r.width > 0;
+    });
+    near.forEach((im) => { if (im.loading === 'lazy') im.loading = 'eager'; });
+    Promise.all([document.fonts ? document.fonts.ready : 0, ...near.map(imgDone)]).then(resolve);
+  };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', go) : setTimeout(go, 0);
+});
 
 
 /* Case studies (converted from Figma): bump hairline borders and 1px line images
@@ -75,9 +94,12 @@ function fit() {
   const vw = root.clientWidth, vh = innerHeight;
   const [bTop, bBot] = (stageEl.dataset.band || '150,860').split(',').map(Number);
   const TOP = 74, BOT = PHONE ? 52 : 66, GAP = PHONE ? 10 : 18;
-  const s = Math.min(vw / W, vh / (TOP + (bBot - bTop) + GAP * 2 + BOT));
+  // data-anchor="top": keep the Figma gaps under the header exactly (no centring slack)
+  const TOPPED = stageEl.dataset.anchor === 'top' && !PHONE;
+  const s = TOPPED ? Math.min(vw / W, vh / (bBot + GAP + BOT))
+                   : Math.min(vw / W, vh / (TOP + (bBot - bTop) + GAP * 2 + BOT));
   const ox = (vw - W * s) / 2;
-  const oy = TOP * s + (vh - (TOP + BOT) * s) / 2 - s * (bTop + bBot) / 2;
+  const oy = TOPPED ? 0 : TOP * s + (vh - (TOP + BOT) * s) / 2 - s * (bTop + bBot) / 2;
   root.style.setProperty('--s', s);
   root.style.setProperty('--ox', `${ox}px`);
   root.style.setProperty('--oy', `${oy}px`);
@@ -149,8 +171,7 @@ if (STACK) {
     const title = makeWin('win-title', [140, 326, 200, 96], [$('h1')], 1.6);
     const cards = el('div', 'st-cards', [...document.querySelectorAll('.card')].sort((a, b) =>
       a.classList.contains('p1') ? -1 : b.classList.contains('p1') ? 1 : a.classList.contains('p2') ? -1 : 1));
-    const chips = el('div', 'st-chips', [...document.querySelectorAll('.hobby')]);
-    flow.append(title, $('.about-tag'), $('.bio'), cards, $('.notdesign'), chips, $('.resume'));
+    flow.append(title, $('.about-tag'), $('.bio'), cards, $('.notdesign'), $('.hobby-loop'), $('.resume'));
     stageEl.classList.add('st-hidden');
   }
   if (page === 'projects') {
@@ -352,6 +373,8 @@ async function runLoader() {
   logo.style.setProperty('--fly-x', `${(B.left - R0.left) / u}px`);
   logo.style.setProperty('--fly-y', `${(B.top - R0.top) / u}px`);
   logo.style.setProperty('--fly-scale', B.width / R0.width);
+  // hold the finished logo until the page behind it is ready (capped, so it never hangs)
+  await Promise.race([PAGE_READY, wait(3000)]);
   root.classList.add('loader-run');   // keep the loader up while the page is revealed
   // 1. logo slides from the centre to the top-left corner
   const landed = new Promise((res) => {
@@ -425,18 +448,45 @@ if (wwm) {
   set('.s-ig', CONTACT.instagram);
   set('.s-mail', `mailto:${CONTACT.email}`);
 
+  /* chat: a sent message posts above the input like a chat bubble. Only this visitor sees
+     their own thread (kept in this browser); delivery to Manvi goes to CONTACT.chatEndpoint. */
   const form = document.querySelector('.contact-form');
-  form && form.addEventListener('submit', (e) => {
+  const thread = document.querySelector('.chat-thread');
+  const KEY = 'mb-chat';
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
+  const save = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list.slice(-30))); } catch (e) {} };
+  const bubble = (m, fresh) => {
+    if (!thread) return;
+    const b = document.createElement('div');
+    b.className = 'chat-msg' + (fresh ? ' new' : '');
+    const t = document.createElement('p'); t.textContent = m.text;
+    const st = document.createElement('span'); st.className = 'chat-st'; st.textContent = m.status || '';
+    b.append(t, st);
+    thread.appendChild(b);
+    thread.scrollTop = thread.scrollHeight;
+    return st;
+  };
+  load().forEach((m) => bubble(m));
+  form && form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = msg.value.trim();
     if (!text) { msg.focus(); return; }
     const send = form.querySelector('.send');
     send.classList.add('sent');
-    setTimeout(() => {
-      location.href = `mailto:${CONTACT.email}?subject=${encodeURIComponent("Let's work together")}&body=${encodeURIComponent(text)}`;
-      msg.value = '';
-      send.classList.remove('sent');
-    }, 550);
+    setTimeout(() => send.classList.remove('sent'), 600);
+    msg.value = '';
+    const m = { text, at: Date.now(), status: 'sending…' };
+    const st = bubble(m, true);
+    const list = load(); list.push(m);
+    let status = 'not delivered yet';
+    if (CONTACT.chatEndpoint) {
+      try {
+        const r = await fetch(CONTACT.chatEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, at: m.at }) });
+        status = r.ok ? 'sent ✓' : 'couldn’t send — try again';
+      } catch (err) { status = 'couldn’t send — try again'; }
+    }
+    m.status = status; if (st) st.textContent = status;
+    save(list);
   });
 }
 
@@ -483,14 +533,88 @@ if (LONG && stageEl.dataset.sections) {
   spy();
 }
 
-/* ---------- home: colour dots bounce ---------- */
-document.querySelectorAll('.dot').forEach((d) => {
-  d.addEventListener('mouseenter', () => (d.style.transform = 'scale(1.06)'));
-  d.addEventListener('mouseleave', () => (d.style.transform = ''));
-});
+/* ---------- home: the four circles open a project window in the same colour ---------- */
+const PROJECTS = {
+  bms: { name: 'Book My Show', color: '#d83b1a', ink: '#fff', href: 'projects/book-my-show-2.html',
+         tag: 'GROUP BOOKING · SPLIT PAYMENTS · 48-HR SPRINT',
+         line: 'Group Pass: every friend pays for their own seat, nobody fronts the whole bill' },
+  ts:  { name: 'Teerth Sathi', color: '#457247', ink: '#fff', href: 'projects/teerth-sathi.html',
+         tag: 'VOLUNTEER COORDINATION · TASK ALLOCATION · CROWD SAFETY',
+         line: 'AI-assisted volunteer coordination for high crowd-density events' },
+  rd:  { name: 'Re-routing Devotion', color: '#f8d71c', ink: '#212121', href: 'projects/rerouting-devotion.html',
+         tag: 'SYSTEMS DESIGN · CIRCULAR ECONOMY · PUBLISHED RESEARCH',
+         line: 'Using the Ganga as a traffic-free highway to move holy waste off the ghats, published at RSD15' },
+  cl:  { name: 'Cheriyal Lipi', color: '#f57cc3', ink: '#212121', href: null,
+         tag: 'TYPOGRAPHY · FOLK ART · MULTI-SCRIPT',
+         line: 'Cheriyal folk art into a typeface across four scripts' },
+};
+(() => {
+  const btns = [...document.querySelectorAll('.dot-btn')];
+  if (!btns.length) return;
+  // the coloured disc under each button grows a touch on hover / when its window is open
+  const discs = [...document.querySelectorAll('.dot:not(.dot-ring)')].filter((d) => !/ring/.test(d.src));
+  const discOf = (b) => discs[btns.indexOf(b)];
+  const ARROW = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.8 3.85h4.67c1.27 0 1.9 0 2.28.39.39.39.4 1.02.4 2.27v4.68M3.85 12.15 11.52 4.48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const pp = document.createElement('div');
+  pp.className = 'pp a';
+  pp.setAttribute('role', 'dialog');
+  pp.setAttribute('aria-modal', 'false');
+  pp.innerHTML = `<div class="pp-video" aria-hidden="true"></div>
+    <div class="pp-body"><p class="pp-title poppins"></p><p class="pp-tag questrial"></p>
+    <a class="pp-link questrial" data-page><span>detailed case study</span>${ARROW}</a>
+    <p class="pp-desc poppins"></p></div>`;
+  (STACK ? document.body : stageEl).appendChild(pp);
+  const scrim = STACK ? document.body.appendChild(Object.assign(document.createElement('div'), { className: 'pp-scrim' })) : null;
+  const $p = (c) => pp.querySelector(c);
+  let cur = null;
+  function open(key, btn) {
+    const P = PROJECTS[key];
+    const swap = cur && cur !== key;
+    const fill = () => {
+      pp.style.setProperty('--pp', P.color);
+      pp.style.setProperty('--pp-ink', P.ink);
+      $p('.pp-title').textContent = P.name;
+      $p('.pp-tag').textContent = P.tag;
+      $p('.pp-desc').textContent = P.line;
+      const a = $p('.pp-link');
+      if (P.href) { a.href = P.href; a.classList.remove('soon'); a.querySelector('span').textContent = 'detailed case study'; a.removeAttribute('aria-disabled'); }
+      else { a.removeAttribute('href'); a.classList.add('soon'); a.querySelector('span').textContent = 'case study coming soon'; a.setAttribute('aria-disabled', 'true'); }
+      pp.setAttribute('aria-label', P.name);
+      // desktop: the one-liner stays on one line inside the window (long lines step the size down a little)
+      const d = $p('.pp-desc');
+      d.style.fontSize = '';
+      if (!PHONE && !STACK) {
+        let fs = 23.5;
+        while (d.scrollWidth > d.clientWidth + 1 && fs > 17) { fs -= 0.5; d.style.fontSize = fs + 'px'; }
+      }
+    };
+    if (swap) { pp.classList.add('swap'); setTimeout(() => { fill(); pp.classList.remove('swap'); }, 160); }
+    else fill();
+    cur = key;
+    btns.forEach((b) => { const on = b === btn; b.setAttribute('aria-expanded', String(on)); discOf(b)?.classList.toggle('on', on); });
+    root.classList.add('pp-open');
+  }
+  function close() {
+    if (!cur) return;
+    cur = null;
+    root.classList.remove('pp-open');
+    btns.forEach((b) => { b.setAttribute('aria-expanded', 'false'); discOf(b)?.classList.remove('on'); });
+  }
+  btns.forEach((b) => {
+    b.setAttribute('aria-expanded', 'false');
+    b.addEventListener('click', (e) => { e.stopPropagation(); cur === b.dataset.p ? close() : open(b.dataset.p, b); });
+    b.addEventListener('mouseenter', () => discOf(b)?.classList.add('hov'));
+    b.addEventListener('mouseleave', () => discOf(b)?.classList.remove('hov'));
+  });
+  pp.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', close);
+  scrim && scrim.addEventListener('click', close);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  document.querySelector('.wwm')?.addEventListener('click', close);
+})();
 
 /* ---------- projects: filter pills — matching cards slide into the first slots ---------- */
-const SLOTS = [[81, 210], [534, 210], [987, 210], [81, 535], [534, 535], [987, 535]];
+const SLOTS = [[81, 206], [536, 206], [992, 206], [80, 535], [536, 535], [992, 535]];
 const cards = [...document.querySelectorAll('.project')];
 function arrange(cat) {
   let i = 0;
@@ -502,9 +626,490 @@ function arrange(cat) {
   });
 }
 if (cards.length) arrange('all');
+// tablets / phones: the colour block changes size, so fit each 416×228 drawing inside it
+if ((STACK || PHONE) && cards.length) {
+  const fitArt = () => document.querySelectorAll('.project .swatch').forEach((sw) => {
+    const art = sw.querySelector('.art'); if (!art) return;
+    const k = Math.min(sw.clientWidth / 416, sw.clientHeight / 228);
+    art.style.setProperty('--ak', k);
+    art.style.setProperty('--ax', `${(sw.clientWidth - 416 * k) / 2}px`);
+  });
+  fitArt(); addEventListener('resize', fitArt); setTimeout(fitArt, 800);
+  document.querySelectorAll('.project .swatch').forEach((sw) => sw.addEventListener('transitionend', fitArt));
+}
 document.querySelectorAll('.pill').forEach((p) => {
   p.addEventListener('click', () => {
     document.querySelectorAll('.pill').forEach((q) => q.setAttribute('aria-pressed', String(q === p)));
     arrange(p.dataset.cat);
   });
 });
+
+/* ---------- case study: synthesis map viewer (Figma dev note · Section 4) ----------
+   Starts on the whole map fitted to the frame. + / − step 1.25× (min Fit, max 4×),
+   wheel / pinch zoom toward the pointer, drag to pan (clamped to the image edges),
+   keyboard + − 0 and arrows, and a full-screen overlay with the same controls. */
+(() => {
+  const img = document.querySelector('[data-map-img]');
+  if (!img) return;
+  const STEP = 1.25, MAX = 4;
+
+  function panZoom(vp, im, ui) {
+    const W = () => im.naturalWidth || 4096, H = () => im.naturalHeight || 736;
+    let z = 1, x = 0, y = 0; // z = zoom relative to Fit
+    const vw = () => vp.clientWidth, vh = () => vp.clientHeight;
+    const fit = () => (ui.contain ? Math.min(vw() / W(), vh() / H()) : vw() / W());
+    const clampAxis = (p, size, view) => (size <= view ? (view - size) / 2 : Math.min(0, Math.max(view - size, p)));
+    function draw() {
+      const k = fit() * z;
+      x = clampAxis(x, W() * k, vw());
+      y = clampAxis(y, H() * k, vh());
+      im.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+      if (ui.label) ui.label.textContent = z <= 1.001 ? 'Fit' : `${Math.round(z * 100)}%`;
+      if (ui.hint) ui.hint.classList.toggle('show', z > 1.001);
+      vp.classList.toggle('zoomed', z > 1.001);
+    }
+    // vp is drawn inside the scaled stage: convert screen px to the viewport's own px
+    const local = (cx, cy) => {
+      const r = vp.getBoundingClientRect(), f = vp.clientWidth / r.width;
+      return [(cx - r.left) * f, (cy - r.top) * f];
+    };
+    function zoomTo(nz, px = vw() / 2, py = vh() / 2) {
+      nz = Math.min(MAX, Math.max(1, nz));
+      const k0 = fit() * z, k1 = fit() * nz;
+      x = px - ((px - x) / k0) * k1;
+      y = py - ((py - y) / k0) * k1;
+      z = nz; draw();
+    }
+    const api = {
+      in: () => zoomTo(z * STEP), out: () => zoomTo(z / STEP), reset: () => { z = 1; x = 0; y = 0; draw(); },
+      pan: (dx, dy) => { x += dx; y += dy; draw(); }, draw,
+    };
+    vp.addEventListener('wheel', (e) => {
+      const nz = Math.min(MAX, Math.max(1, z * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0025))));
+      if (nz === z) return; // at Fit / max: let the page scroll
+      e.preventDefault();
+      zoomTo(nz, ...local(e.clientX, e.clientY));
+    }, { passive: false });
+    const pts = new Map(); let last = null, pinch = null;
+    vp.addEventListener('pointerdown', (e) => {
+      vp.setPointerCapture(e.pointerId);
+      pts.set(e.pointerId, local(e.clientX, e.clientY));
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z };
+      }
+      last = local(e.clientX, e.clientY);
+      vp.classList.add('grabbing');
+    });
+    vp.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId)) return;
+      const p = local(e.clientX, e.clientY);
+      pts.set(e.pointerId, p);
+      if (pts.size === 2 && pinch) {
+        const [a, b] = [...pts.values()];
+        zoomTo(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+      } else if (last) { api.pan(p[0] - last[0], p[1] - last[1]); }
+      last = p;
+    });
+    const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; last = pts.size ? [...pts.values()][0] : null; if (!pts.size) vp.classList.remove('grabbing'); };
+    vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
+    vp.tabIndex = 0;
+    vp.addEventListener('keydown', (e) => {
+      const m = { '+': api.in, '=': api.in, '-': api.out, '_': api.out, '0': api.reset }[e.key];
+      const a = { ArrowLeft: [60, 0], ArrowRight: [-60, 0], ArrowUp: [0, 60], ArrowDown: [0, -60] }[e.key];
+      if (m) { e.preventDefault(); m(); } else if (a && z > 1.001) { e.preventDefault(); api.pan(...a); }
+    });
+    if (im.complete) draw(); else im.addEventListener('load', draw);
+    addEventListener('resize', draw);
+    return api;
+  }
+
+  const asButton = (el, label, fn) => {
+    if (!el) return;
+    el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-label', label); el.classList.add('map-btn');
+    el.addEventListener('click', fn);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
+  };
+  const btn = (act) => document.querySelector(`[data-map-act="${act}"]`)?.parentElement?.parentElement;
+
+  // inline viewer: the bordered image frame becomes the pan/zoom window
+  const vp = img.parentElement;
+  vp.classList.add('map-vp');
+  img.classList.add('map-img');
+  const viewer = vp.parentElement;
+  const label = [...viewer.querySelectorAll('p')].find((p) => p.textContent.trim() === 'Fit');
+  const hint = [...viewer.querySelectorAll('p')].find((p) => p.textContent.includes('Drag to pan'))?.parentElement;
+  hint?.classList.add('map-hint');
+  const inline = panZoom(vp, img, { label, hint });
+  vp.setAttribute('aria-label', 'Synthesis map. Drag to pan, + and − to zoom.');
+  asButton(btn('in'), 'Zoom in', inline.in);
+  asButton(btn('out'), 'Zoom out', inline.out);
+
+  // full-screen overlay with the same pan / zoom
+  let full = null, lastFocus = null;
+  function open() {
+    lastFocus = document.activeElement;
+    if (!full) {
+      full = document.createElement('div');
+      full.className = 'map-full';
+      full.setAttribute('role', 'dialog'); full.setAttribute('aria-modal', 'true'); full.setAttribute('aria-label', 'Synthesis map, full screen');
+      full.innerHTML = `<div class="map-full-vp"><img class="map-img" alt="Synthesis map · Re-Routing Devotion" src="${img.getAttribute('src')}"></div>
+        <p class="map-full-title">Synthesis map · Re-Routing Devotion</p>
+        <button class="map-full-close" type="button" aria-label="Close full screen">×</button>
+        <div class="map-full-bar"><button type="button" data-a="in" aria-label="Zoom in">+</button><span class="map-full-zl">Fit</span><button type="button" data-a="out" aria-label="Zoom out">−</button></div>
+        <p class="map-full-hint">Drag to pan · Scroll or use + / − to zoom · Esc to close</p>`;
+      document.body.appendChild(full);
+      const fvp = full.querySelector('.map-full-vp');
+      const fapi = panZoom(fvp, fvp.firstElementChild, { label: full.querySelector('.map-full-zl'), contain: true });
+      full.querySelector('[data-a="in"]').onclick = fapi.in;
+      full.querySelector('[data-a="out"]').onclick = fapi.out;
+      full.querySelector('.map-full-close').onclick = close;
+      full.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      full._api = fapi;
+    }
+    full.classList.add('open');
+    root.classList.add('map-open');
+    requestAnimationFrame(() => { full._api.reset(); full.querySelector('.map-full-vp').focus(); });
+  }
+  function close() {
+    full.classList.remove('open');
+    root.classList.remove('map-open');
+    lastFocus?.focus?.();
+  }
+  asButton(btn('full'), 'Open full screen', open);
+  const cta = document.querySelector('[data-map-act="open"]')?.parentElement?.parentElement;
+  asButton(cta, 'Open the full synthesis map', open);
+})();
+
+/* ---------- case study: prototype walkthrough (Book My Show) — two phones ----------
+   Rohan's phone (A) and Dev's phone (B) sit side by side. The scroll only picks the chapter;
+   each chapter plays on its own clock. Between the phones, a wire shows what travels and which
+   way: the WhatsApp link going to Dev, and "Dev paid" coming back to Rohan. */
+(() => {
+  const track = document.querySelector('.pw-track');
+  if (!track) return;
+  const D = JSON.parse(track.dataset.proto);
+  const NS = D.steps.length, N = D.screens.length;
+  const pin = track.querySelector('.pw-pin-wrap');
+  const $q = (s) => pin.querySelector(s); // the panel moves between the track and a fixed host
+  const cols = { A: $q('.pw-col[data-phone="A"]'), B: $q('.pw-col[data-phone="B"]') };
+  const phones = { A: cols.A.querySelector('.pw-phone'), B: cols.B.querySelector('.pw-phone') };
+  const fingers = { A: cols.A.querySelector('.pw-finger'), B: cols.B.querySelector('.pw-finger') };
+  const L = []; pin.querySelectorAll('.pw-layer').forEach((l) => (L[+l.dataset.i] = l));
+  const pinsBox = { A: cols.A.querySelector('.pw-pins'), B: cols.B.querySelector('.pw-pins') };
+  const pinsOf = (i) => [...pin.querySelectorAll(`.pw-pin[data-s="${i}"]`)];
+  const wire = $q('.pw-wire'), packet = $q('.pw-packet'), chip = $q('.pw-chip');
+  const stepsLi = [...pin.querySelectorAll('.pw-steps li')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const BAR = 147;
+  const sc = () => Number(getComputedStyle(root).getPropertyValue('--s')) || 1;
+  const byStep = D.steps.map((_, k) => D.screens.map((s, i) => (s.step === k ? i : -1)).filter((i) => i >= 0));
+
+  // images: load all, preload frame sequences, sample status / home colours
+  L.forEach((l) => { const im = l.querySelector('img'); if (im) im.loading = 'eager'; });
+  D.screens.forEach((sc_) => (sc_.frames || []).forEach((f) => { const im = new Image(); im.src = f; }));
+  L.forEach((l) => {
+    const img = l.querySelector('img'); if (!img) return;
+    const paint = () => {
+      try {
+        const c = document.createElement('canvas'); c.width = 8; c.height = 2; const x = c.getContext('2d');
+        x.drawImage(img, 0, 0, img.naturalWidth, 6, 0, 0, 8, 2);
+        let [r, g, b] = x.getImageData(4, 0, 1, 1).data;
+        l.querySelector('.pw-status').style.background = `rgb(${r},${g},${b})`;
+        l.classList.toggle('dark', r * 0.299 + g * 0.587 + b * 0.114 < 140);
+        x.drawImage(img, 0, img.naturalHeight - 4, img.naturalWidth, 4, 0, 0, 8, 2);
+        [r, g, b] = x.getImageData(4, 0, 1, 1).data;
+        l.querySelector('.pw-home').style.background = `rgb(${r},${g},${b})`;
+        l.classList.toggle('dark-home', r * 0.299 + g * 0.587 + b * 0.114 < 140);
+      } catch (e) { /* keep white */ }
+    };
+    if (img.complete && img.naturalWidth) paint(); else img.addEventListener('load', paint);
+  });
+
+  let pinH = 900;
+  function layout() {
+    pinH = Math.max(560, innerHeight / sc() - BAR);
+    pin.style.height = `${pinH}px`;
+    const ph = Math.min(pinH - 22 - 40 - 46 - 44, 700);
+    Object.values(phones).forEach((p) => p.style.setProperty('--ph', `${ph}px`));
+  }
+
+  /* ---- screens, per phone ---- */
+  const cur = { A: -1, B: -1 };
+  const PUSH = 'transform .6s cubic-bezier(.3,.7,.2,1), opacity .6s ease';
+  function setLayer(l, tf, op, z, vis, anim) {
+    l.style.transition = anim ? PUSH : 'none';
+    l.style.transform = tf; l.style.opacity = op; l.style.zIndex = z; l.style.visibility = vis;
+  }
+  function show(i, how = 'cut', silent) {
+    const p = D.screens[i].phone, fromI = cur[p], from = fromI >= 0 ? L[fromI] : null, to = L[i];
+    to.classList.remove('ticked', 'notif', 'banner');
+    { const f = D.screens[i].frames; if (f && f.length) to.querySelector('img').src = f[0]; }
+    pinsBox[p].style.visibility = 'hidden'; pinsBox[p].querySelectorAll('.pw-pin').forEach((d) => d.classList.remove('on'));
+    const mine = L.filter((l, k) => l && D.screens[k].phone === p);
+    if (!from || from === to || how === 'cut' || reduce) {
+      mine.forEach((l) => { setLayer(l, 'none', 1, l === to ? 2 : 1, l === to ? 'visible' : 'hidden', false); l.style.setProperty('--shade', 0); });
+    } else {
+      const start = { push: 'translateX(100%)', back: 'translateX(-100%)', fade: 'none' }[how] || 'translateX(100%)';
+      setLayer(to, start, how === 'fade' ? 0 : 1, 3, 'visible', false);
+      void to.offsetWidth;
+      setLayer(to, 'none', 1, 3, 'visible', true);
+      setLayer(from, how === 'push' ? 'translateX(-28%)' : how === 'back' ? 'translateX(28%)' : 'none', 1, 2, 'visible', true);
+      from.style.setProperty('--shade', how === 'fade' ? 0 : 0.18);
+      setTimeout(() => { if (cur[p] !== fromI) { from.style.visibility = 'hidden'; from.style.setProperty('--shade', 0); } }, 650);
+    }
+    cur[p] = i;
+    if (!silent) setText(i);
+  }
+  let lastStep = -1;
+  function setText(i) {
+    const s = D.screens[i], st = D.steps[s.step];
+    if (s.step !== lastStep) {
+      [$q('.pw-num'), $q('.pw-title')].forEach((e) => { e.classList.remove('swap'); void e.offsetWidth; e.classList.add('swap'); });
+      $q('.pw-num').textContent = st[0]; $q('.pw-title').textContent = st[1];
+      stepsLi.forEach((li, k) => { li.classList.toggle('on', k === s.step); li.classList.toggle('done', k < s.step); });
+      lastStep = s.step;
+    }
+    $q('.pw-count b').textContent = i + 1; $q('.pw-badge').textContent = i + 1;
+    setCap(s.cap, s.why);
+  }
+  function setCap(cap, why) {
+    const R = $q('.pw-right'); R.classList.remove('swap'); void R.offsetWidth; R.classList.add('swap');
+    $q('.pw-cap-t').textContent = cap; $q('.pw-why span').textContent = why;
+  }
+  function focusPhone(p) { cols.A.classList.toggle('idle', p !== 'A'); cols.B.classList.toggle('idle', p !== 'B'); }
+  function place(p, xy) {
+    const first = L[D.screens.findIndex((s) => s.phone === p)];
+    const st = first.querySelector('.pw-status').offsetHeight, shot = first.querySelector('.pw-shot');
+    fingers[p].style.left = `${(xy[0] / 100) * shot.offsetWidth}px`;
+    fingers[p].style.top = `${st + (xy[1] / 100) * shot.offsetHeight}px`;
+  }
+  // what the other phone shows while this chapter plays
+  function backdrop(k) {
+    if (k < 3) { if (cur.B !== byStep[3][0]) show(byStep[3][0], 'cut', true); else L[cur.B].classList.remove('notif'); }
+    if (k === 3) show(byStep[2][byStep[2].length - 1], 'cut', true);   // Rohan: his tickets
+    if (k === 4) show(byStep[3][byStep[3].length - 1], 'cut', true);   // Dev: his ticket
+  }
+  function resetWire() { wire.className = 'pw-wire'; packet.style.transition = chip.style.transition = 'none'; }
+
+  /* ---- a chapter's timeline (time-based, cancelled when the chapter changes) ---- */
+  let run = 0, chapter = -1, startAt = null;
+  const wait = (ms, id) => new Promise((res, rej) => setTimeout(() => (id === run ? res() : rej(0)), ms));
+  const bar = (k, f) => { const i = stepsLi[k]?.querySelector('i'); if (i) i.style.width = `${f * 100}%`; };
+  const nextEl = $q('.pw-next-t');
+
+  async function send(dir, label, id) {
+    resetWire();
+    wire.classList.add(dir === 'AB' ? 'ab' : 'ba', 'live');
+    chip.textContent = label;
+    const a = dir === 'AB' ? '0%' : '100%', b = dir === 'AB' ? '100%' : '0%';
+    packet.style.left = chip.style.left = a; void wire.offsetWidth;
+    packet.style.transition = chip.style.transition = '';
+    wire.classList.add('go');
+    packet.style.left = chip.style.left = b;
+    await wait(reduce ? 300 : 1750, id);
+    wire.classList.remove('go');
+  }
+
+  async function play(k, from = 0, how) {
+    if (startAt && startAt.k === k) { from = startAt.n; how = startAt.how; }
+    startAt = null;
+    const id = ++run;
+    chapter = k;
+    const P = D.steps[k][3];
+    nextEl.textContent = k < NS - 1 ? 'Scroll for the next step' : 'Scroll to continue';
+    stepsLi.forEach((li, j) => bar(j, j < k ? 1 : 0));
+    const list = byStep[k];
+    const cost = (i) => D.screens[i].taps.length + 1.6;
+    const total = list.reduce((n, i) => n + cost(i), 0);
+    let done = list.slice(0, from).reduce((n, i) => n + cost(i), 0);
+    const tick = (n) => { done += n; bar(k, Math.min(1, done / total)); };
+    bar(k, done / total);
+    fingers.A.classList.remove('on'); fingers.B.classList.remove('on');
+    pin.classList.remove('ended');
+    resetWire();
+    backdrop(k);
+    focusPhone(P);
+    show(list[from], how || (cur[P] >= 0 && D.screens[cur[P]].step === k - 1 ? 'push' : 'cut'));
+    updArrows();
+    try {
+      // something arrives from the other phone first (link → Dev, "paid" → Rohan)
+      const arr = D.arrive[list[from]];
+      if (arr && !how) {
+        await wait(500, id);
+        await send(arr.dir, arr.label, id);
+        L[list[from]].classList.add(arr.dir === 'AB' ? 'notif' : 'banner');
+        await wait(1300, id);
+      } else if (arr) { L[list[from]].classList.add(arr.dir === 'AB' ? 'notif' : 'banner'); }
+      await wait(700, id);
+      for (let n = from; n < list.length; n++) {
+        const i = list[n], s = D.screens[i];
+        if (s.hold) await wait(s.hold, id);
+        if (!reduce) {
+          for (let t = 0; t < s.taps.length; t++) {
+            place(P, s.taps[t]);
+            fingers[P].classList.add('on');
+            await wait(t === 0 ? 650 : 520, id);
+            fingers[P].classList.remove('tap'); void fingers[P].offsetWidth; fingers[P].classList.add('tap');
+            if (D.pinScreens.includes(i)) { pinsBox[P].style.visibility = 'visible'; pinsOf(i)[t]?.classList.add('on'); }
+            const act = s.taps[t][2];
+            if (act === 'tick') { L[i].classList.add('ticked'); await wait(2600, id); }
+            if (act === 'sub' && s.sub) { setCap(s.sub[0], s.sub[1]); await wait(900, id); }
+            if (act === 'frame' && s.frames[t + 1]) L[i].querySelector('img').src = s.frames[t + 1];
+            await wait(420, id);
+            tick(1);
+          }
+        } else { await wait(1800, id); tick(s.taps.length); }
+        await wait(s.taps.length ? 380 : 1600, id);
+        fingers[P].classList.remove('on');
+        if (n < list.length - 1) { show(list[n + 1], s.tr === 'fade' ? 'fade' : 'push'); updArrows(); await wait(1100, id); }
+        tick(1.6);
+      }
+      bar(k, 1);
+      pin.classList.add('ended');
+    } catch (e) { /* chapter changed */ }
+  }
+
+  /* ---- pinning: while pinned the panel lives in a fixed host (no per-scroll movement = no shake) ---- */
+  const host = document.createElement('div');
+  host.className = 'pw-fixed case-study';
+  document.body.appendChild(host);
+  let mode = '';
+  function placeHost() { const s = sc(), tr = track.getBoundingClientRect(); host.style.transform = `translate(${tr.left}px, ${BAR * s}px) scale(${s})`; }
+  function setMode(m, range) {
+    if (m === mode) return;
+    mode = m;
+    if (m === 'pinned') { placeHost(); pin.style.top = '0px'; host.appendChild(pin); }
+    else { pin.style.top = m === 'after' ? `${range}px` : '0px'; track.appendChild(pin); }
+  }
+  function onScroll() {
+    const r = track.getBoundingClientRect(), s = sc();
+    const range = track.offsetHeight - pinH;
+    const off = Math.min(range, Math.max(0, (BAR * s - r.top) / s));
+    setMode(off <= 0 ? 'before' : off >= range ? 'after' : 'pinned', range);
+    const k = Math.min(NS - 1, Math.floor((off / range) * NS));
+    if (off > 0 && off < range) { if (k !== chapter) play(k); }
+    else if (off <= 0 && chapter !== -1) {
+      run++; chapter = -1; lastStep = -1;
+      fingers.A.classList.remove('on', 'tap'); fingers.B.classList.remove('on', 'tap');
+      stepsLi.forEach((li, j) => { bar(j, 0); li.classList.toggle('on', j === 0); li.classList.remove('done'); });
+      pin.classList.remove('ended'); resetWire();
+      show(byStep[3][0], 'cut', true); show(0); focusPhone('A');
+    }
+  }
+  function goTo(k) {
+    const r = track.getBoundingClientRect(), s = sc();
+    const range = track.offsetHeight - pinH;
+    scrollTo({ top: scrollY + r.top - BAR * s + ((k + 0.5) / NS) * range * s, behavior: 'smooth' });
+    if (k === chapter) play(k);
+  }
+
+  // ‹ › one screen back / forward (crossing steps and phones), ↻ replay the step
+  function updArrows() {
+    const at = chapter >= 0 ? cur[D.steps[chapter][3]] : 0;
+    $q('.pw-prev').disabled = at <= 0;
+    $q('.pw-nextbtn').disabled = at >= N - 1;
+  }
+  function stepTo(i, how) {
+    if (i < 0 || i >= N) return;
+    const k = D.screens[i].step, n = byStep[k].indexOf(i);
+    if (k === chapter) { play(k, n, how); return; }
+    startAt = { k, n, how };
+    goTo(k);
+  }
+  const here = () => cur[D.steps[Math.max(0, chapter)][3]];
+  $q('.pw-prev').addEventListener('click', () => stepTo(here() - 1, 'back'));
+  $q('.pw-nextbtn').addEventListener('click', () => stepTo(here() + 1, 'push'));
+  $q('.pw-replay').addEventListener('click', () => play(Math.max(0, chapter)));
+
+  layout();
+  show(byStep[3][0], 'cut', true);   // Dev's phone waits on the lock screen
+  show(0); focusPhone('A');
+  stepsLi[0].classList.add('on');
+  onScroll();
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { layout(); mode = ''; onScroll(); placeHost(); });
+  stepsLi.forEach((li, k) => {
+    li.tabIndex = 0; li.setAttribute('role', 'button'); li.setAttribute('aria-label', `Play step ${k + 1}: ${D.steps[k][1]}`);
+    li.addEventListener('click', () => goTo(k));
+    li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goTo(k); } });
+  });
+  updArrows();
+})();
+
+/* ---------- about: hobbies roll straight up, one after another, in a loop ---------- */
+(() => {
+  const loop = document.querySelector('.hobby-loop');
+  if (!loop) return;
+  const strip = loop.querySelector('.hobby-strip');
+  const words = [...strip.children];           // last one repeats the first, for a seamless wrap
+  const fit = (w) => loop.style.setProperty('--hw', w.offsetWidth + 'px');
+  let i = 0;
+  requestAnimationFrame(() => fit(words[0]));
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setInterval(() => {
+    if (document.hidden) return;
+    i += 1;
+    strip.classList.add('roll');
+    strip.style.transform = `translateY(${-i * 40}px)`;
+    fit(words[i]);
+    if (i === words.length - 1) {                // landed on the copy of the first word: jump back unseen
+      setTimeout(() => {
+        strip.classList.remove('roll');
+        strip.style.transform = 'translateY(0)';
+        i = 0;
+      }, 750);
+    }
+  }, 2200);
+})();
+
+/* ---------- background warm-up ----------
+   After the page is up: (1) case studies quietly load their remaining images in order,
+   so nothing pops in while scrolling; (2) every other page and its first-screen images
+   are fetched into the cache, so opening a project feels instant. Skipped on Save-Data / 2G. */
+(() => {
+  const net = navigator.connection || {};
+  const slow = net.saveData || /(^|-)2g$/.test(net.effectiveType || '');
+  const idle = (fn, t = 1200) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: t }) : setTimeout(fn, 300));
+  const base = location.pathname.replace(/(projects\/)?[^/]*$/, '');
+  const PAGES = ['index.html', 'about.html', 'projects.html', 'projects/book-my-show-2.html',
+                 'projects/rerouting-devotion.html', 'projects/teerth-sathi.html'];
+  const here = location.pathname.replace(base, '') || 'index.html';
+  const seen = new Set();
+  const warm = (url) => { if (seen.has(url)) return; seen.add(url); const i = new Image(); i.decoding = 'async'; i.src = url; };
+
+  async function progressive() {           // case studies: load everything below the fold, top to bottom
+    const lazy = [...document.querySelectorAll('img[loading="lazy"]')];
+    for (let i = 0; i < lazy.length; i += 6) {
+      const batch = lazy.slice(i, i + 6);
+      batch.forEach((im) => (im.loading = 'eager'));
+      await Promise.race([Promise.all(batch.map(imgDone)), wait(4000)]);
+    }
+  }
+  async function prefetchPages() {
+    for (const pg of PAGES) {
+      if (pg === here) continue;
+      const url = base + pg;
+      try {
+        const html = await (await fetch(url, { credentials: 'same-origin' })).text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const dir = url.replace(/[^/]*$/, '');
+        // first-screen images: those placed in the top ~1100 design px
+        const firsts = [...doc.querySelectorAll('img[src]')].filter((im) => {
+          for (let n = im; n && n.getAttribute; n = n.parentElement) {
+            const m = /(?:^|;)\s*top:\s*(-?[\d.]+)px/.exec(n.getAttribute('style') || '');
+            if (m) return parseFloat(m[1]) < 1100;
+          }
+          return true;
+        }).slice(0, 40);
+        firsts.forEach((im) => warm(new URL(im.getAttribute('src'), dir).href));
+        if (pg === 'projects.html') doc.querySelectorAll('.art img').forEach((im) => warm(new URL(im.getAttribute('src'), dir).href));
+      } catch (_) {}
+      await wait(250);
+    }
+  }
+  addEventListener('load', () => idle(async () => {
+    if (LONG) await progressive();
+    if (!slow) idle(prefetchPages, 3000);
+  }));
+})();

@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&family=Questrial&family=Raleway:wght@300;400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3956a003">
 </head>
 <body>
 <main class="stage" data-band="205,800" data-page="about">
@@ -36,11 +36,6 @@
   <!-- highlights sit under the text -->
   <div class="reveal d3">
     <div class="a hl" style="left:149px;top:615px;width:185px"></div>
-    <div class="a hl" style="left:713px;top:688px;width:123px"></div>
-    <div class="a hl" style="left:855px;top:688px;width:100px"></div>
-    <div class="a hl" style="left:975px;top:688px;width:100px"></div>
-    <div class="a hl" style="left:1095px;top:688px;width:100px"></div>
-    <div class="a hl" style="left:1224px;top:688px;width:100px"></div>
   </div>
 
   <!-- header -->
@@ -62,10 +57,10 @@
   </h1>
   <p class="a about-tag poppins reveal d2">product designer . UX strategist . brand strategist</p>
 
-  <div class="a reveal d3" style="left:679px;top:397px;width:232px;height:173px;background:#457247"></div>
+  <div class="a reveal d3" style="left:666px;top:423px;width:232px;height:173px;background:#457247"></div>
 
   <!-- achievements -->
-  <div class="a card p3" style="left:1153px;top:457px;width:232.409px;height:144.423px">
+  <div class="a card p3" style="left:1144px;top:483px;width:232.409px;height:144.423px">
     <div class="a rot" style="inset:0">
       <div style="width:225.175px;height:120.936px;background:#d83b1a;transform:rotate(-6.06deg) skewX(-2.04deg)"></div>
     </div>
@@ -83,9 +78,8 @@
   </div>
 
   <!-- resume -->
-  <a class="a resume questrial reveal d3" href="#" aria-label="Download resume">
-    <span class="label">Resume</span>
-    <img src="assets/icon-download.svg" alt="">
+  <a class="a resume questrial reveal d3" href="assets/Manvi-Bhayre-Resume.pdf" download="Manvi-Bhayre-Resume.pdf" aria-label="Download resume (PDF)">
+    <span class="label">View Resume</span>
   </a>
 
   <div class="a bio poppins reveal d3">
@@ -95,16 +89,20 @@
   </div>
 
   <p class="a notdesign poppins reveal d3">When I’m  not designing</p>
-  <div class="reveal d3">
-    <p class="a hobby poppins" style="left:725px">Recording life</p>
-    <p class="a hobby poppins" style="left:855px">Editing</p>
-    <p class="a hobby poppins" style="left:975px">Travelling</p>
-    <p class="a hobby poppins" style="left:1095px">Scrolling</p>
-    <p class="a hobby poppins" style="left:1224px">Eating</p>
+  <!-- hobbies: one big word at a time, swiping up in a loop -->
+  <div class="a hobby-loop poppins reveal d3" aria-label="Recording life, editing, travelling, scrolling, eating">
+    <div class="hobby-strip" aria-hidden="true">
+      <span class="hobby-word">Recording life</span>
+      <span class="hobby-word">Editing</span>
+      <span class="hobby-word">Travelling</span>
+      <span class="hobby-word">Scrolling</span>
+      <span class="hobby-word">Eating</span>
+      <span class="hobby-word">Recording life</span>
+    </div>
   </div>
 
   <!-- experience -->
-  <div class="a card p2" style="left:909px;top:310px;width:282.88px;height:225.935px">
+  <div class="a card p2" style="left:900px;top:336px;width:282.88px;height:225.935px">
     <div class="a rot" style="inset:0">
       <div style="width:253px;height:181px;background:#f57cc3;transform:rotate(11deg)"></div>
     </div>
@@ -131,7 +129,7 @@
   </div>
 
   <!-- education -->
-  <div class="a card p1" style="left:650px;top:381px;width:274.105px;height:216.425px">
+  <div class="a card p1" style="left:641px;top:407px;width:274.105px;height:216.425px">
     <div class="a rot" style="inset:0">
       <div style="width:248.417px;height:178.44px;background:#f8d71c;transform:rotate(-9.35deg)"></div>
     </div>
@@ -279,7 +277,7 @@
     </section>
   </div>
 
-  <a class="a resume questrial reveal d3" href="#" aria-label="Download resume" style="left:49.31px;top:601.32px;width:99.164px;height:22.477px;border-radius:.441px">
+  <a class="a resume questrial reveal d3" href="assets/Manvi-Bhayre-Resume.pdf" download="Manvi-Bhayre-Resume.pdf" aria-label="Download resume (PDF)" style="left:49.31px;top:601.32px;width:99.164px;height:22.477px;border-radius:.441px">
     <span class="label" style="left:18.69px;top:5.68px;width:47px;font-size:12.34px">Resume</span>
     <img src="assets/phone/icon-download.svg" alt="" style="left:67.69px;top:5.68px;width:10.845px;height:10.845px">
   </a>
@@ -288,6 +286,6 @@
   <p class="a coord coord-n poppins-light persist">26° 30' 47.3519" N</p>
   <p class="a coord coord-e poppins-light persist">80° 13' 58.4789" E</p>
 </template>
-<script src="main.js"></script>
+<script src="main.js?v=228b8b74"></script>
 </body>
 </html>
