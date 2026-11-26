@@ -948,10 +948,25 @@ html:not(.phone):not(.stack) .pp-tab1 { left: 33px; width: 224px; }
 html:not(.phone):not(.stack) .pp-tab2 { left: 867px; top: 1px; width: 66px; }
 html:not(.phone):not(.stack) .pp-video { left: 33px; top: 53px; width: 896px; height: 359px; }
 html:not(.phone) .pp-ctrl { display: block; position: absolute; left: 0; top: 0; }
-.pp-ctrl svg { position: absolute; fill: currentColor; }
-.pp-pause { left: 803px; top: 438px; width: 15px; height: 15px; }
-.pp-play { left: 855px; top: 435px; width: 20px; height: 20px; }
-.pp-rew { left: 908px; top: 434px; width: 23px; height: 23px; }
+.pp-ctrl button { position: absolute; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; opacity: .6; transition: opacity .2s ease, transform .2s ease; }
+.pp-ctrl button:hover { opacity: 1; transform: scale(1.12); }
+.pp-ctrl button:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; opacity: 1; }
+.pp-ctrl button:disabled { opacity: .3; cursor: default; transform: none; }
+.pp-toggle .i-play, .pp.has-vid:not(.playing) .pp-toggle .i-pause { display: none; }
+.pp.has-vid:not(.playing) .pp-toggle .i-play { display: block; }
+.pp-ctrl svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+.pp-video { overflow: hidden; }
+.pp-amb { position: absolute; inset: 0; width: 100%; height: 100%; filter: blur(14px); pointer-events: none; }
+.pp-video video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer;
+  -webkit-mask-image: radial-gradient(closest-side, #000 78%, transparent 100%); mask-image: radial-gradient(closest-side, #000 78%, transparent 100%);
+  -webkit-mask-size: var(--vw, 100%) var(--vh, 100%); mask-size: var(--vw, 100%) var(--vh, 100%); -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.pp:not(.has-vid) .pp-video video, .pp:not(.has-vid) .pp-amb { visibility: hidden; }
+.pp-sound { position: absolute; right: 12px; bottom: 10px; padding: 4px 10px; border-radius: 20px; background: rgba(33,33,33,.55); color: #f3f3f1; font: 11px/1.3 'Questrial', sans-serif; letter-spacing: .5px; cursor: pointer; opacity: 0; transition: opacity .3s ease; }
+.pp.has-vid.playing.muted .pp-sound { opacity: 1; }
+.pp-restart { left: 794px; top: 434px; width: 20px; height: 20px; }
+.pp-rew { left: 833px; top: 433px; width: 23px; height: 23px; }
+.pp-toggle { left: 873px; top: 437px; width: 15px; height: 15px; }
+.pp-fwd { left: 906px; top: 433px; width: 23px; height: 23px; }
 html:not(.phone):not(.stack) .pp-title { left: 33px; top: 480px; }
 html:not(.phone):not(.stack) .pp-tag { left: 33px; top: 511px; }
 html:not(.phone):not(.stack) .pp-link { left: 799px; top: 511px; }
@@ -974,6 +989,17 @@ html.phone.pp-open .pp { clip-path: inset(0 0 0 0); }
 html.phone .pp-video { left: 21px; top: 62px; width: 348px; height: 219px; }
 html.phone .pp-link { left: 236px; top: 290px; width: 130px; }
 html.phone .pp-link svg { width: 13px; height: 13px; }
+/* phone: the same four controls, on the left of the case-study link row */
+html.phone .pp-ctrl { display: block; position: absolute; left: 0; top: 0; }
+html.phone .pp-restart { left: 22px; top: 290px; width: 17px; height: 17px; }
+html.phone .pp-rew { left: 55px; top: 289px; width: 19px; height: 19px; }
+html.phone .pp-toggle { left: 91px; top: 292px; width: 13px; height: 13px; }
+html.phone .pp-fwd { left: 120px; top: 289px; width: 19px; height: 19px; }
+html.phone .pp-full { left: 154px; top: 290px; width: 17px; height: 17px; }
+.pp-full { display: none; }
+html.phone .pp-full { display: block; }
+.pp-video video:fullscreen { -webkit-mask-image: none; mask-image: none; background: #f3f3f1; }
+html.phone .pp-sound { right: 8px; bottom: 8px; font-size: 10px; }
 html.phone .pp-title { left: 17px; top: 357px; }
 html.phone .pp-tag { left: 17px; top: 390px; width: 360px; }
 html.phone .pp-desc { left: 17px; top: 432px; width: 340px; }
@@ -992,8 +1018,8 @@ html.stack.pp-open .pp { clip-path: inset(-20px 0 0 0); }
 html.stack .pp-tab { top: -16px; height: 17px; }
 html.stack .pp-tab1 { left: 3.4%; width: 23.3%; }
 html.stack .pp-tab2 { right: 3.4%; width: 6.9%; }
-html.stack .pp-ctrl { position: relative; display: flex; justify-content: flex-end; gap: 30px; height: 20px; margin: -4px 2px -2px 0; }
-html.stack .pp-ctrl svg { position: relative; left: auto; top: auto; }
+html.stack .pp-ctrl { position: relative; display: flex; justify-content: flex-end; align-items: center; gap: 26px; height: 23px; margin: -4px 2px -2px 0; }
+html.stack .pp-ctrl button { position: relative; left: auto; top: auto; }
 html.stack .pp-video { position: relative; left: auto; top: auto; width: 100%; height: auto; aspect-ratio: 898 / 411; }
 html.stack .pp-body { position: relative; inset: auto; display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; pointer-events: auto; }
 html.stack .pp-body > * { position: relative; left: auto; top: auto; width: auto; }

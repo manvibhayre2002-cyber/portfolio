@@ -566,9 +566,11 @@ if (LONG && stageEl.dataset.sections) {
 /* ---------- home: the four circles open a project window in the same colour ---------- */
 const PROJECTS = {
   bms: { name: 'Book My Show', color: '#d83b1a', ink: '#fff', href: 'projects/book-my-show-2.html',
+         video: 'assets/video/grouppass-v2.mp4', poster: 'assets/video/grouppass-poster-v1.webp',
          tag: 'GROUP BOOKING · SPLIT PAYMENTS · 48-HR SPRINT',
          line: 'Group Pass: every friend pays for their own seat, nobody fronts the whole bill' },
   ts:  { name: 'Teerth Sathi', color: '#457247', ink: '#fff', href: 'projects/teerth-sathi.html',
+         video: 'assets/video/teerth-sathi-v2.mp4', poster: 'assets/video/teerth-sathi-poster-v1.webp',
          tag: 'VOLUNTEER COORDINATION · TASK ALLOCATION · CROWD SAFETY',
          line: 'AI-assisted volunteer coordination for high crowd-density events' },
   rd:  { name: 'Re-routing Devotion', color: '#efb506', ink: '#212121', href: 'projects/rerouting-devotion.html',
@@ -594,11 +596,13 @@ const PROJECTS = {
   pp.setAttribute('aria-modal', 'false');
   // laptop / tablet: camera-shaped window (two tabs on top + playback controls under the screen); phone keeps the plain card
   pp.innerHTML = `<i class="pp-tab pp-tab1" aria-hidden="true"></i><i class="pp-tab pp-tab2" aria-hidden="true"></i>
-    <div class="pp-video" aria-hidden="true"></div>
-    <div class="pp-ctrl" aria-hidden="true">
-      <svg class="pp-pause" viewBox="0 0 15 15"><rect x="2.4" y="1" width="3.4" height="13" rx=".8"/><rect x="9.2" y="1" width="3.4" height="13" rx=".8"/></svg>
-      <svg class="pp-play" viewBox="0 0 20 20"><path d="M5 4.2v11.6c0 .8.9 1.3 1.6.8l9-5.8c.6-.4.6-1.2 0-1.6l-9-5.8C5.9 2.9 5 3.4 5 4.2z"/></svg>
-      <svg class="pp-rew" viewBox="0 0 23 23"><path d="M11.2 17.3V5.8L3 11.5l8.2 5.8zm.6-5.8 8.2 5.8V5.8l-8.2 5.7z"/></svg>
+    <div class="pp-video"><canvas class="pp-amb" width="160" height="64" aria-hidden="true"></canvas><video playsinline muted loop preload="none" aria-label="Project film"></video><span class="pp-sound">tap for sound</span></div>
+    <div class="pp-ctrl">
+      <button type="button" class="pp-restart" aria-label="Restart"><svg viewBox="0 0 20 20"><path d="M10 3.2a6.8 6.8 0 1 1-6.5 8.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2.6 2.6v5.3h5.3z"/></svg></button>
+      <button type="button" class="pp-rew" aria-label="Back 5 seconds"><svg viewBox="0 0 23 23"><path d="M11.2 17.3V5.8L3 11.5l8.2 5.8zm.6-5.8 8.2 5.8V5.8l-8.2 5.7z"/></svg></button>
+      <button type="button" class="pp-toggle" aria-label="Pause"><svg class="i-pause" viewBox="0 0 15 15"><rect x="2.4" y="1" width="3.4" height="13" rx=".8"/><rect x="9.2" y="1" width="3.4" height="13" rx=".8"/></svg><svg class="i-play" viewBox="0 0 15 15"><path d="M3.2 1.9v11.2c0 .7.8 1.1 1.4.7l8.4-5.6c.5-.4.5-1.1 0-1.4L4.6 1.2c-.6-.4-1.4 0-1.4.7z"/></svg></button>
+      <button type="button" class="pp-fwd" aria-label="Forward 5 seconds"><svg viewBox="0 0 23 23"><path d="M11.8 17.3V5.8l8.2 5.7-8.2 5.8zm-.6-5.8L3 17.3V5.8l8.2 5.7z"/></svg></button>
+      <button type="button" class="pp-full" aria-label="Full screen"><svg viewBox="0 0 18 18"><path d="M2 6.5V2h4.5M11.5 2H16v4.5M16 11.5V16h-4.5M6.5 16H2v-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="pp-body"><p class="pp-title poppins"></p><p class="pp-tag questrial"></p>
     <a class="pp-link questrial" data-page><span>detailed case study</span>${ARROW}</a>
@@ -607,6 +611,71 @@ const PROJECTS = {
   const scrim = STACK ? document.body.appendChild(Object.assign(document.createElement('div'), { className: 'pp-scrim' })) : null;
   const $p = (c) => pp.querySelector(c);
   let cur = null;
+  // the project film: starts silently when the window opens; any control (or a tap on the film) brings the sound in.
+  // ⟲ restart · ⏪ back 5 s · ❚❚/▶ pause-play · ⏩ forward 5 s
+  const vid = $p('video');
+  const QUIET = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tog = $p('.pp-toggle');
+  const sync = () => {
+    pp.classList.toggle('playing', !vid.paused); pp.classList.toggle('muted', vid.muted);
+    tog.setAttribute('aria-label', vid.paused ? 'Play' : 'Pause');
+  };
+  ['play', 'pause', 'volumechange'].forEach((ev) => vid.addEventListener(ev, sync));
+  const go = () => { vid.muted = false; vid.play().catch(() => {}); };
+  const seek = (d) => { vid.currentTime = Math.max(0, Math.min((vid.duration || 0) - 0.1, vid.currentTime + d)); go(); };
+  tog.addEventListener('click', () => (vid.paused ? go() : (vid.muted ? go() : vid.pause())));
+  $p('.pp-restart').addEventListener('click', () => { vid.currentTime = 0; go(); });
+  $p('.pp-rew').addEventListener('click', () => seek(-5));
+  $p('.pp-fwd').addEventListener('click', () => seek(5));
+  vid.addEventListener('click', () => (vid.paused || vid.muted ? go() : vid.pause()));
+  $p('.pp-sound').addEventListener('click', go);
+  // full screen (phone): the film alone, with sound, turned sideways where the phone allows it; native controls while it's big
+  $p('.pp-full').addEventListener('click', () => {
+    go();
+    const ios = () => vid.webkitEnterFullscreen && vid.webkitEnterFullscreen();   // iPhone Safari
+    if (vid.requestFullscreen) vid.requestFullscreen().then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(ios);
+    else ios();
+  });
+  const fsChange = () => { vid.controls = document.fullscreenElement === vid; if (!vid.controls) screen.orientation?.unlock?.(); };
+  document.addEventListener('fullscreenchange', fsChange);
+  // the film's soft colour wash carries on past its edges: a tiny, heavily blurred copy of the frame fills the screen behind it
+  const amb = $p('.pp-amb'), actx = amb.getContext('2d');
+  let ambOn = false, tick = 0;
+  let fw = 1, fh = 1;   // share of the screen the film actually covers (set by fit below)
+  const paint = () => {
+    if (vid.readyState < 2) return;
+    const cw = amb.width, ch = amb.height, W = vid.videoWidth, H = vid.videoHeight, e = 0.025;
+    const dw = fw * cw, dh = fh * ch, dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+    try {
+      // stretch only the film's outermost edge colours outwards, then the film itself in the middle
+      if (dx > 0) { actx.drawImage(vid, 0, 0, W * e, H, 0, dy, dx + 1, dh); actx.drawImage(vid, W * (1 - e), 0, W * e, H, dx + dw - 1, dy, dx + 1, dh); }
+      if (dy > 0) { actx.drawImage(vid, 0, 0, W, H * e, 0, 0, cw, dy + 1); actx.drawImage(vid, 0, H * (1 - e), W, H * e, 0, dy + dh - 1, cw, dy + 1); }
+      actx.drawImage(vid, dx, dy, dw, dh);
+    } catch (err) {}
+  };
+  const loop = () => { if (!ambOn) return; if (tick++ % 4 === 0) paint(); requestAnimationFrame(loop); };
+  vid.addEventListener('play', () => { if (!ambOn) { ambOn = true; loop(); } });
+  vid.addEventListener('pause', () => { ambOn = false; paint(); });
+  ['loadeddata', 'seeked'].forEach((ev) => vid.addEventListener(ev, paint));
+  // feather only the film itself: size the soft-edged mask to where the film is actually drawn inside the screen
+  const fit = () => {
+    if (!vid.videoWidth || !vid.clientWidth) return;
+    const k = Math.min(vid.clientWidth / vid.videoWidth, vid.clientHeight / vid.videoHeight);
+    fw = vid.videoWidth * k / vid.clientWidth; fh = vid.videoHeight * k / vid.clientHeight;
+    amb.width = 160; amb.height = Math.max(20, Math.round(160 * vid.clientHeight / vid.clientWidth));
+    vid.style.setProperty('--vw', `${(vid.videoWidth * k / vid.clientWidth) * 100 + 6}%`);
+    vid.style.setProperty('--vh', `${(vid.videoHeight * k / vid.clientHeight) * 100 + 6}%`);
+  };
+  vid.addEventListener('loadedmetadata', fit); addEventListener('resize', fit);
+  const setVideo = (P) => {
+    pp.classList.toggle('has-vid', !!P.video);
+    $p('.pp-ctrl').querySelectorAll('button').forEach((b) => { b.disabled = !P.video; });
+    if (!P.video) { actx.clearRect(0, 0, amb.width, amb.height); vid.pause(); vid.removeAttribute('src'); vid.removeAttribute('poster'); vid.load(); return; }
+    if (!vid.src.endsWith(P.video)) { vid.poster = P.poster; vid.src = P.video; }
+    vid.muted = true; vid.currentTime = 0;
+    if (!QUIET) vid.play().catch(() => {});
+    sync();
+  };
   function open(key, btn) {
     const P = PROJECTS[key];
     const swap = cur && cur !== key;
@@ -627,6 +696,7 @@ const PROJECTS = {
       if (P.href) { a.href = P.href; a.classList.remove('soon'); a.querySelector('span').textContent = 'detailed case study'; a.removeAttribute('aria-disabled'); }
       else { a.removeAttribute('href'); a.classList.add('soon'); a.querySelector('span').textContent = 'case study coming soon'; a.setAttribute('aria-disabled', 'true'); }
       pp.setAttribute('aria-label', P.name);
+      setVideo(P);
       // desktop: the one-liner stays on one line inside the window (long lines step the size down a little)
       const d = $p('.pp-desc');
       d.style.fontSize = '';
@@ -650,12 +720,22 @@ const PROJECTS = {
     if (!cur) return;
     cur = null;
     root.classList.remove('pp-open');
+    vid.pause();
     btns.forEach((b) => { b.setAttribute('aria-expanded', 'false'); discOf(b)?.classList.remove('on'); });
   }
+  // head start: posters load quietly once the page is idle; pointing at (or touching) a circle starts fetching its film
+  const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1500));
+  addEventListener('load', () => idle(() => Object.values(PROJECTS).forEach((P) => { if (P.poster) new Image().src = P.poster; })));
+  const warm = (key) => {
+    const P = PROJECTS[key];
+    if (cur || !P || !P.video || vid.src.endsWith(P.video)) return;
+    vid.preload = 'auto'; vid.poster = P.poster; vid.src = P.video;
+  };
   btns.forEach((b) => {
     b.setAttribute('aria-expanded', 'false');
     b.addEventListener('click', (e) => { e.stopPropagation(); cur === b.dataset.p ? close() : open(b.dataset.p, b); });
-    b.addEventListener('mouseenter', () => discOf(b)?.classList.add('hov'));
+    b.addEventListener('mouseenter', () => { discOf(b)?.classList.add('hov'); warm(b.dataset.p); });
+    b.addEventListener('touchstart', () => warm(b.dataset.p), { passive: true });
     b.addEventListener('mouseleave', () => discOf(b)?.classList.remove('hov'));
   });
   pp.addEventListener('click', (e) => e.stopPropagation());
