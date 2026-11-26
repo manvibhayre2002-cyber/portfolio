@@ -15,6 +15,9 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /* ---------- fit the 1512×982 canvas to the viewport ---------- */
 const stageEl = document.querySelector('.stage');
 const LONG = root.classList.contains('long'); // case studies: fit width, scroll vertically
+// phones: case studies are re-flowed into a single readable column (see reflowCaseStudy below)
+const CSP = LONG && Math.min(root.clientWidth, screen.width || 9999) < 600;
+if (CSP) root.classList.add('cs-phone');
 
 /* ---------- page readiness: fonts + the images you'll see first ----------
    The intro loader waits on this (never more than a few seconds), so the page
@@ -80,6 +83,7 @@ function setHair(target, s) {
   target.style.setProperty('--hair-half', `${Math.max(0.5, Math.ceil(1 / s) / DPR, 1 / DPR / s)}px`);
 }
 function fit() {
+  if (CSP) return;   // phone case studies are laid out at real size, no canvas scaling
   if (LONG) {
     const s = root.clientWidth / W;
     root.style.setProperty('--s', s);
@@ -520,8 +524,254 @@ if (wwm) {
   });
 }
 
+/* ---------- case studies on phones: one readable column ----------
+   The Figma canvas is 1512 px of absolutely placed layers. On a phone each layer is sorted into
+   reading order: text becomes normal flowing text at phone sizes; pictures and diagrams (plus any
+   text sitting on them) stay together as one figure, scaled to the screen width (wide diagrams
+   with labels can be swiped sideways). Big coloured section backgrounds are carried behind their
+   content; hairlines and frame boxes from the desktop grid are dropped. */
+function reflowCaseStudy() {
+  const PW = root.clientWidth, PAD = 20, CW = PW - PAD * 2, BAR_H = 147;
+  root.style.setProperty('--s', 1);
+  const layer = stageEl.children.length === 1 ? stageEl.firstElementChild : stageEl;
+  // display:contents groups only wrap absolutely placed children — lift those children out
+  [...layer.querySelectorAll(':scope > *')].forEach((el) => {
+    if (getComputedStyle(el).display === 'contents') { while (el.firstChild) layer.insertBefore(el.firstChild, el); el.remove(); }
+  });
+  const L0 = layer.getBoundingClientRect();
+  const pageBg = getComputedStyle(layer).backgroundColor;
+  const rectOf = (el) => { const r = el.getBoundingClientRect(); return { l: r.left - L0.left, t: r.top - L0.top, w: r.width, h: r.height }; };
+  const clear = (c) => !c || c === 'transparent' || /rgba\(.*,\s*0\)$/.test(c);
+  const head = [], units = [], bands = [], hide = [];
+  const INHERIT = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'color', 'textTransform', 'textAlign', 'fontVariationSettings'];
+  const queue = [...layer.children].map((el) => ({ el, nested: false }));
+  while (queue.length) {
+    const { el, nested } = queue.shift();
+    if (el.tagName === 'SCRIPT') continue;
+    const r = rectOf(el);
+    if (r.w === 0 && r.h === 0) continue;
+    if (!nested && r.t >= -2 && r.t + r.h <= BAR_H + 2) { head.push(el); continue; }
+    const text = el.textContent.trim().length > 0;
+    const img = el.matches('img, svg, canvas, video') || !!el.querySelector('img, svg, canvas, video, .pw-track');
+    const cs = getComputedStyle(el);
+    // a big wrapper holding both words and pictures (or a whole section) is opened up and its children sorted one by one
+    const flowKids = [...el.children].filter((k) => getComputedStyle(k).position !== 'absolute').length;
+    if (!el.classList.contains('pw') && !el.matches('svg, img') && el.children.length > 1 && text && img && (r.h > 500 || r.w > 1000)
+        && cs.transform === 'none' && flowKids >= el.children.length * 0.6) {
+      const kids = [...el.children];
+      kids.forEach((k) => { const kc = getComputedStyle(k); INHERIT.forEach((p) => { if (!k.style[p]) k.style[p] = kc[p]; }); });
+      if (!clear(cs.backgroundColor) && cs.backgroundColor !== pageBg && r.w >= 1300) bands.push({ l: 0, r: 1512, t: r.t, b: r.t + r.h, bg: cs.backgroundColor });
+      kids.forEach((k) => queue.push({ el: k, nested: true }));
+      continue;
+    }
+    const l = Math.max(0, r.l), rr = Math.min(1512, r.l + r.w);
+    const u = { el, l, t: r.t, w: Math.max(0, rr - l), h: r.h, r: rr, b: r.t + r.h, raw: r, nested };
+    const bg = cs.backgroundColor;
+    if (el.classList.contains('pw')) u.kind = 'special';
+    else if (!text && !img) {
+      if (!clear(bg) && bg !== pageBg && u.w >= 1300) { u.kind = 'band'; u.bg = bg; }
+      else if (!clear(bg) && bg !== pageBg && u.w * u.h > 60) u.kind = 'visual';
+      else if (parseFloat(cs.borderTopLeftRadius) > 4 && parseFloat(cs.borderTopWidth) > 0) u.kind = 'visual';   // pills, rounded cards
+      else if ([...el.querySelectorAll('*')].some((k) => { const c = getComputedStyle(k).backgroundColor; return !clear(c) && c !== pageBg; })) u.kind = 'visual';
+      else u.kind = 'decor';
+    } else if (img) u.kind = (!text && ((u.h <= 4 && u.w >= 900) || (u.w <= 4 && u.h >= 900))) ? 'decor' : 'visual';   // only full-width dividers are dropped
+    else u.kind = 'text';
+    if (u.kind === 'band') bands.push(u); else if (u.kind === 'decor') hide.push(el); else units.push(u);
+  }
+  // children lifted out of a flex wrapper keep their exact place inside figures
+  units.forEach((u) => { if (u.nested) u.el.dataset.cspFreeze = `${u.raw.l},${u.raw.t},${u.raw.w},${u.raw.h}`; });
+  hide.forEach((el) => { el.style.display = 'none'; });
+  // figures: visuals that touch each other, plus any text sitting on them, travel together
+  const hit = (a, b, pad = 0) => a.l < b.r + pad && b.l < a.r + pad && a.t < b.b + pad && b.t < a.b + pad;
+  const area = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+  const par = units.map((_, i) => i);
+  const find = (i) => (par[i] === i ? i : (par[i] = find(par[i])));
+  const join = (i, j) => { par[find(i)] = find(j); };
+  units.forEach((a, i) => units.forEach((b, j) => {
+    if (j <= i) return;
+    const va = a.kind !== 'text', vb = b.kind !== 'text';
+    if (va && vb && hit(a, b, 10)) join(i, j);
+    else if (va !== vb) {
+      const t = va ? b : a, v = va ? a : b;
+      // text on a picture, or a short label / legend right beside one, belongs to that figure
+      const short = t.el.textContent.trim().length < 48 && t.h < 60;
+      if (area(a, b) > 0.25 * t.w * t.h || (short && v.w < 900 && v.h < 700 && hit(t, v, 18))) join(i, j);
+    }
+  }));
+  const groups = new Map();
+  units.forEach((u, i) => { const k = find(i); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(u); });
+  const blocks = [...groups.values()].map((g) => {
+    const l = Math.min(...g.map((u) => u.l)), t = Math.min(...g.map((u) => u.t));
+    const r = Math.max(...g.map((u) => u.r)), b = Math.max(...g.map((u) => u.b));
+    const kind = g.some((u) => u.kind === 'special') ? 'special' : g.length === 1 && g[0].kind === 'text' ? 'text' : 'figure';
+    return { g, l, t, r, b, w: r - l, h: b - t, kind, text: g.some((u) => u.el.textContent.trim()) };
+  });
+  // reading order (XY-cut): split by clear horizontal gaps first, then by clear vertical gaps (left column first)
+  function xy(list) {
+    if (list.length <= 1) return list;
+    const byT = [...list].sort((a, b) => a.t - b.t);
+    const cuts = [];   // [index, gap] where everything above ends before byT[index] starts
+    let maxB = byT[0].b;
+    for (let i = 1; i < byT.length; i++) { if (byT[i].t >= maxB - 3) cuts.push([i, byT[i].t - maxB]); maxB = Math.max(maxB, byT[i].b); }
+    const splitAt = (arr, idx) => { const out = []; let p = 0; idx.forEach((i) => { out.push(...xy(arr.slice(p, i))); p = i; }); out.push(...xy(arr.slice(p))); return out; };
+    const big = cuts.filter(([, g]) => g >= 40).map(([i]) => i);
+    if (big.length) return splitAt(byT, big);                       // separate sections
+    // a table (several rows, each with cells side by side) reads row by row, each row as one line of cells
+    if (cuts.length >= 3) {
+      const idx = [0, ...cuts.map(([i]) => i), byT.length];
+      const slabs = idx.slice(1).map((e, k) => byT.slice(idx[k], e));
+      const hs = slabs.map((s) => Math.max(...s.map((x) => x.b)) - Math.min(...s.map((x) => x.t))).sort((a, b) => a - b);
+      if (slabs.length >= 4 && hs.filter((h) => h <= 40).length >= slabs.length * 0.85 && slabs.filter((s) => s.length >= 2).length >= slabs.length * 0.6) {
+        return slabs.flatMap((s) => { const row = [...s].sort((a, b) => a.l - b.l); row.forEach((c, k) => { c.cell = k > 0; c.rowStart = k === 0; }); return row; });
+      }
+    }
+    const byL = [...list].sort((a, b) => a.l - b.l);
+    let maxR = byL[0].r;
+    for (let i = 1; i < byL.length; i++) {                           // side-by-side columns: left one first
+      if (byL[i].l >= maxR - 3) return [...xy(byL.slice(0, i)), ...xy(byL.slice(i))];
+      maxR = Math.max(maxR, byL[i].r);
+    }
+    if (cuts.length) return splitAt(byT, [cuts[0][0]]);
+    return byT.sort((a, b) => (a.t - b.t) || (a.l - b.l));
+  }
+  const order = xy(blocks);
+
+  const flow = document.createElement('div');
+  flow.className = 'csp-flow';
+  const SIZE = (fs) => (fs <= 15 ? Math.max(11, fs * 0.92) : Math.min(34, 7.5 + fs * 0.47));
+  function flowify(el) {
+    // Figma keeps words apart with no-break spaces, which stops lines wrapping on a narrow screen
+    const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = tw.nextNode(); n; n = tw.nextNode()) if (n.nodeValue.includes('\u00a0')) n.nodeValue = n.nodeValue.replace(/\u00a0/g, ' ');
+    const all = [el, ...el.querySelectorAll('*')];
+    const cs = all.map((n) => getComputedStyle(n));
+    all.forEach((n, i) => {
+      const c = cs[i], s = n.style;
+      const fs = parseFloat(c.fontSize);
+      if (n.childNodes.length && [...n.childNodes].some((x) => x.nodeType === 3 && x.textContent.trim()) || n === el) {
+        s.fontSize = SIZE(fs) + 'px';
+      }
+      if (c.lineHeight.endsWith('px')) s.lineHeight = '1.42';
+      if (c.whiteSpace !== 'normal') s.whiteSpace = 'normal';
+      s.wordBreak = 'normal'; s.overflowWrap = 'break-word';
+      if (parseFloat(c.width) > CW - 2 || (n !== el && c.position !== 'absolute' && parseFloat(c.width) > 300)) { s.width = 'auto'; s.maxWidth = '100%'; s.minWidth = '0'; }
+      if (c.height.endsWith('px') && n.tagName !== 'IMG' && c.position !== 'absolute' && n.textContent.trim() && parseFloat(c.width) > 60) s.height = 'auto';
+      if (c.overflow !== 'visible') s.overflow = 'visible';
+      if (c.display === 'flex' && c.flexDirection.startsWith('row') && n.children.length > 1 && n.scrollWidth > CW) {
+        const kids = [...n.children], small = kids.filter((k) => k.offsetWidth <= 60);
+        if (small.length && small.length < kids.length) {        // a badge or number beside text: keep them side by side
+          kids.forEach((k) => { if (k.offsetWidth <= 60) k.style.flex = 'none'; else { k.style.flex = '1 1 0'; k.style.minWidth = '0'; k.style.width = 'auto'; } });
+          s.gap = Math.min(parseFloat(c.columnGap) || 12, 14) + 'px';
+        } else { s.flexWrap = 'wrap'; kids.forEach((k) => { k.style.flex = '1 1 100%'; k.style.width = 'auto'; }); }
+      }
+    });
+    const s = el.style;
+    s.position = 'relative'; s.left = s.top = s.right = s.bottom = 'auto'; s.inset = 'auto';
+    s.transform = 'none'; s.width = 'auto'; s.maxWidth = '100%'; s.height = 'auto'; s.textAlign = 'left';
+  }
+  function figure(bk) {
+    const textual = bk.text && bk.kind !== 'special';
+    let k = CW / bk.w, swipe = false;
+    if (bk.w > 900 && textual && k < 0.42) { k = 0.42; swipe = true; }
+    if (!bk.text && bk.w >= 1300) k = PW / bk.w;           // full-bleed pictures run edge to edge
+    k = Math.min(k, 1);
+    const box = document.createElement('div');
+    box.className = 'csp-fig' + (swipe ? ' swipe' : '') + (!bk.text && bk.w >= 1300 ? ' bleed' : '');
+    const inner = document.createElement('div');
+    inner.className = 'csp-in';
+    inner.style.cssText = `width:${bk.w * k}px;height:${bk.h * k}px`;
+    const canvas = document.createElement('div');
+    canvas.className = 'csp-canvas';
+    canvas.style.cssText = `left:${-bk.l * k}px;top:${-bk.t * k}px;transform:scale(${k})`;
+    bk.g.forEach((u) => {
+      if (u.el.dataset.cspFreeze) {
+        const [l, t, w, h] = u.el.dataset.cspFreeze.split(',').map(Number);
+        Object.assign(u.el.style, { position: 'absolute', left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px', margin: '0', flex: 'none', boxSizing: 'border-box', inset: 'auto', right: 'auto', bottom: 'auto' });
+        u.el.style.left = l + 'px'; u.el.style.top = t + 'px';
+      }
+      canvas.appendChild(u.el);
+    });
+    inner.appendChild(canvas); box.appendChild(inner);
+    if (swipe) { const h = document.createElement('p'); h.className = 'csp-hint'; h.textContent = 'swipe to see the whole diagram →'; box.appendChild(h); }
+    return box;
+  }
+  // Book My Show walkthrough: the pinned two-phone player needs a wide screen, so phones get the same
+  // screens as a sideways strip — step, screen, caption — with the header and prototype link above it
+  function protoStrip(pw) {
+    const box = document.createElement('div');
+    box.className = 'csp-proto';
+    const headEl = pw.firstElementChild;
+    if (headEl && !headEl.classList.contains('pw-track')) { flowify(headEl); box.appendChild(headEl); }
+    const track = pw.querySelector('.pw-track');
+    const D = JSON.parse(track.dataset.proto);
+    const strip = document.createElement('div');
+    strip.className = 'csp-strip';
+    pw.querySelectorAll('.pw-layer').forEach((layerEl) => {
+      const im = layerEl.querySelector('.pw-shot img');
+      const s = D.screens[+layerEl.dataset.i];
+      if (!im || !s) return;
+      const st = D.steps[s.step];
+      const card = document.createElement('figure');
+      card.className = 'csp-shot';
+      const pic = document.createElement('img');
+      pic.src = im.getAttribute('src'); pic.alt = im.alt; pic.loading = 'lazy'; pic.decoding = 'async';
+      card.innerHTML = `<p class="csp-step">${st[0]} · ${st[1]}</p>`;
+      card.appendChild(pic);
+      const cap = document.createElement('figcaption');
+      cap.textContent = (s.phone === 'B' ? 'Dev: ' : 'Rohan: ') + s.cap;
+      card.appendChild(cap);
+      card.dataset.i = layerEl.dataset.i;
+      strip.appendChild(card);
+    });
+    [...strip.children].sort((a, b) => a.dataset.i - b.dataset.i).forEach((c) => strip.appendChild(c));
+    box.appendChild(strip);
+    const hint = document.createElement('p'); hint.className = 'csp-hint'; hint.textContent = `${strip.children.length} screens · swipe →`;
+    box.appendChild(hint);
+    pw.remove();
+    return box;
+  }
+  let prevB = BAR_H, curBand = null, wrap = flow;
+  order.forEach((bk) => {
+    const band = bands.find((b) => bk.t >= b.t - 2 && bk.t < b.b);
+    if (band !== curBand) {
+      curBand = band;
+      if (band) { wrap = document.createElement('div'); wrap.className = 'csp-band'; wrap.style.background = band.bg; flow.appendChild(wrap); }
+      else wrap = flow;
+    }
+    let node;
+    if (bk.kind === 'text') { node = bk.g[0].el; flowify(node); }
+    else if (bk.kind === 'special') node = protoStrip(bk.g.find((u) => u.kind === 'special').el);
+    else node = figure(bk);
+    const gap = bk.t - prevB;
+    node.style.marginTop = bk.cell ? '2px' : `${gap < -2 ? 22 : Math.round(Math.max(6, Math.min(56, gap * 0.4)))}px`;
+    if (bk.rowStart) { node.classList.add('csp-row'); }
+    if (bk.cell) node.classList.add('csp-cell');
+    wrap.appendChild(node);
+    prevB = Math.max(prevB, bk.b);
+  });
+  // header: logo + Home/About/Projects, then the section tabs as a sideways strip
+  const bar = document.createElement('header');
+  bar.className = 'csp-bar';
+  const top = document.createElement('div'); top.className = 'csp-top';
+  const logo = layer.querySelector('a[aria-label="Home"]');
+  if (logo) { const a = document.createElement('a'); a.href = logo.getAttribute('href'); a.className = 'csp-logo'; a.setAttribute('aria-label', 'Home'); a.setAttribute('data-page', ''); const im = logo.querySelector('img'); if (im) a.appendChild(im); top.appendChild(a); }
+  const nav = document.createElement('nav'); nav.className = 'csp-nav';
+  layer.querySelectorAll('.cs-nav').forEach((a) => { a.removeAttribute('style'); nav.appendChild(a); });
+  top.appendChild(nav); bar.appendChild(top);
+  const tabs = document.createElement('nav'); tabs.className = 'csp-tabs';
+  layer.querySelectorAll('.subnav').forEach((a) => { a.removeAttribute('style'); tabs.appendChild(a); });
+  if (tabs.children.length) bar.appendChild(tabs);
+  head.forEach((el) => el.remove());
+  document.body.insertBefore(bar, document.body.firstChild);
+  layer.replaceChildren(flow);
+  layer.removeAttribute('style');
+  stageEl.removeAttribute('style');
+  document.querySelector('.cs-spacer').style.height = '0px';
+}
+if (CSP) reflowCaseStudy();
+
 /* ---------- case studies: pin the header + tab bar while scrolling ---------- */
-if (LONG) {
+if (LONG && !CSP) {
   const BAR_H = 147; // design px: site header (0–74) + section tabs (73–147)
   const bar = document.createElement('div');
   bar.className = 'cs-bar';
@@ -537,6 +787,51 @@ if (LONG) {
   const stick = () => bar.classList.toggle('stuck', scrollY > 4);
   addEventListener('scroll', stick, { passive: true });
   stick();
+}
+
+/* ---------- case studies: big stat numbers count up from 1 the first time they come into view ----------
+   Any large number set on its own (11, 72, 07, 6.67 lakh, 2×, ₹2,016…) counts up once, keeping its
+   leading zeros, decimals, commas and any word after it. Ranges and phrases like "1 in 4" stay as they are. */
+if (LONG && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const NUM = /^(₹?)(\d[\d,]*(?:\.\d+)?)(\s*[^\d]*)$/;
+  const items = [];
+  const tw = document.createTreeWalker(stageEl, NodeFilter.SHOW_TEXT);
+  for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+    const raw = n.nodeValue.trim(), m = NUM.exec(raw);
+    if (!m) continue;
+    const el = n.parentElement;
+    if (!el || el.closest('.subnav, .cs-nav, .pw, .csp-proto, svg')) continue;
+    const fs = parseFloat(getComputedStyle(el).fontSize) / (CSP ? 1 : 1);
+    if (fs < (CSP ? 26 : 40)) continue;                     // only the big headline figures
+    const digits = m[2], target = parseFloat(digits.replace(/,/g, ''));
+    if (!(target > 1)) continue;
+    const dec = (digits.split('.')[1] || '').length, pad = /^0\d/.test(digits) ? digits.length : 0, comma = digits.includes(',');
+    items.push({ n, lead: n.nodeValue.match(/^\s*/)[0], pre: m[1], suf: m[3], target, dec, pad, comma, el });
+  }
+  const fmt = (it, v) => {
+    let s = it.dec ? v.toFixed(it.dec) : String(Math.round(v));
+    if (it.pad) s = s.padStart(it.pad, '0');
+    if (it.comma) s = Number(s).toLocaleString('en-IN', { minimumFractionDigits: it.dec, maximumFractionDigits: it.dec });
+    return it.lead + it.pre + s + it.suf;
+  };
+  const run = (it) => {
+    const start = performance.now(), D = 1400 + Math.min(600, it.target * 4);
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / D), e = 1 - Math.pow(1 - k, 3);   // ease-out: quick start, gentle landing
+      it.n.nodeValue = fmt(it, 1 + (it.target - 1) * e);
+      if (k < 1) requestAnimationFrame(step); else { it.n.nodeValue = fmt(it, it.target); it.el.style.fontVariantNumeric = ''; }   // lands in the design's own digits
+    };
+    requestAnimationFrame(step);
+  };
+  if (items.length) {
+    items.forEach((it) => { it.el.style.fontVariantNumeric = 'tabular-nums'; it.n.nodeValue = fmt(it, 1); });
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      items.filter((it) => it.el === e.target).forEach(run);
+    }), { threshold: 0.6 });
+    [...new Set(items.map((it) => it.el))].forEach((el) => io.observe(el));
+  }
 }
 
 /* ---------- case studies: section tabs jump + highlight while scrolling ---------- */

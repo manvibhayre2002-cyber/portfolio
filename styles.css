@@ -1069,3 +1069,35 @@ html.talk .chat-who { pointer-events: auto; }
   100% { transform: scale(1.18) rotate(0); }
 }
 @media (prefers-reduced-motion: reduce) { .dot-icon.hov { animation: none; transform: scale(1.12); } }
+
+/* =================================================================
+   CASE STUDIES ON PHONES (html.cs-phone) — one readable column, see reflowCaseStudy in main.js
+   ================================================================= */
+html.cs-phone .stage { position: relative; transform: none; width: auto; height: auto; left: 0; }
+html.cs-phone .stage > * { position: relative !important; width: auto !important; height: auto !important; }
+.csp-flow { padding: 8px 20px 64px; }
+.csp-flow > *, .csp-band > * { display: block; }
+.csp-band { margin: 24px -20px 0; padding: 4px 20px 28px; }
+.csp-fig { position: relative; }
+.csp-fig.bleed { margin-left: -20px; margin-right: -20px; }
+.csp-in { position: relative; overflow: hidden; }
+.csp-fig.swipe { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-right: -20px; padding-right: 20px; scrollbar-width: none; }
+.csp-fig.swipe::-webkit-scrollbar { display: none; }
+.csp-canvas { position: absolute; width: 1512px; transform-origin: 0 0; }
+.csp-hint { margin: 6px 0 0; font: 11px/1.3 'Questrial', sans-serif; letter-spacing: .4px; color: #8a8a8a; }
+.csp-bar { position: sticky; top: 0; z-index: 100; background: #f3f3f1; border-bottom: 1px solid #212121; }
+.csp-top { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 20px; border-bottom: 1px solid #212121; }
+.csp-logo img { position: static !important; display: block; width: 34px !important; height: auto !important; }
+.csp-nav { display: flex; gap: 16px; font: 14px 'Poppins', sans-serif; }
+.csp-nav a { color: #939393; } .csp-nav a[aria-current] { color: #212121; }
+.csp-tabs { display: flex; gap: 18px; overflow-x: auto; padding: 11px 20px; font: 13px 'Poppins', sans-serif; white-space: nowrap; scrollbar-width: none; }
+.csp-tabs::-webkit-scrollbar { display: none; }
+.csp-tabs a { color: #939393; flex: none; }
+.csp-proto .csp-strip { scroll-padding-left: 20px; display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 16px -20px 0; padding: 0 20px 4px; scrollbar-width: none; }
+.csp-strip::-webkit-scrollbar { display: none; }
+.csp-shot { flex: none; width: 62vw; max-width: 250px; margin: 0; scroll-snap-align: start; }
+.csp-shot img { display: block; width: 100%; height: auto; border-radius: 22px; border: 5px solid #1e1e1e; box-sizing: border-box; background: #fff; }
+.csp-step { margin: 0 0 8px; font: 12px/1.3 'Questrial', sans-serif; letter-spacing: .5px; color: #d83b1a; text-transform: uppercase; }
+.csp-shot figcaption { margin-top: 8px; font: 13px/1.4 'Inter', sans-serif; color: #212121; }
+.csp-row { border-top: 1px solid rgba(33,33,33,.18); padding-top: 10px; margin-top: 10px !important; }
+.csp-cell { opacity: .92; }
