@@ -571,10 +571,10 @@ const PROJECTS = {
   ts:  { name: 'Teerth Sathi', color: '#457247', ink: '#fff', href: 'projects/teerth-sathi.html',
          tag: 'VOLUNTEER COORDINATION · TASK ALLOCATION · CROWD SAFETY',
          line: 'AI-assisted volunteer coordination for high crowd-density events' },
-  rd:  { name: 'Re-routing Devotion', color: '#f8d71c', ink: '#212121', href: 'projects/rerouting-devotion.html',
+  rd:  { name: 'Re-routing Devotion', color: '#efb506', ink: '#212121', href: 'projects/rerouting-devotion.html',
          tag: 'SYSTEMS DESIGN · CIRCULAR ECONOMY · PUBLISHED RESEARCH',
          line: 'Using the Ganga as a traffic-free highway to move holy waste off the ghats, published at RSD15' },
-  cl:  { name: 'Cheriyal Lipi', color: '#f57cc3', ink: '#212121', href: null,
+  cl:  { name: 'Cheriyal Lipi', color: '#f57cc3', ink: '#212121', href: 'projects/cheriyal-lipi.html',
          tag: 'TYPOGRAPHY · FOLK ART · MULTI-SCRIPT',
          line: 'Cheriyal folk art into a typeface across four scripts' },
 };
@@ -583,13 +583,23 @@ const PROJECTS = {
   if (!btns.length) return;
   // the coloured disc under each button grows a touch on hover / when its window is open
   const discs = [...document.querySelectorAll('.dot:not(.dot-ring)')].filter((d) => !/ring/.test(d.src));
-  const discOf = (b) => discs[btns.indexOf(b)];
+  const icons = [...document.querySelectorAll('.dot-icon')];
+  const discOf = (b) => { const i = btns.indexOf(b); const d = discs[i], ic = icons[i];
+    return d && { classList: { add: (c) => { d.classList.add(c); ic && ic.classList.add(c); }, remove: (c) => { d.classList.remove(c); ic && ic.classList.remove(c); },
+                               toggle: (c, on) => { d.classList.toggle(c, on); ic && ic.classList.toggle(c, on); } } }; };
   const ARROW = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.8 3.85h4.67c1.27 0 1.9 0 2.28.39.39.39.4 1.02.4 2.27v4.68M3.85 12.15 11.52 4.48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const pp = document.createElement('div');
   pp.className = 'pp a';
   pp.setAttribute('role', 'dialog');
   pp.setAttribute('aria-modal', 'false');
-  pp.innerHTML = `<div class="pp-video" aria-hidden="true"></div>
+  // laptop / tablet: camera-shaped window (two tabs on top + playback controls under the screen); phone keeps the plain card
+  pp.innerHTML = `<i class="pp-tab pp-tab1" aria-hidden="true"></i><i class="pp-tab pp-tab2" aria-hidden="true"></i>
+    <div class="pp-video" aria-hidden="true"></div>
+    <div class="pp-ctrl" aria-hidden="true">
+      <svg class="pp-pause" viewBox="0 0 15 15"><rect x="2.4" y="1" width="3.4" height="13" rx=".8"/><rect x="9.2" y="1" width="3.4" height="13" rx=".8"/></svg>
+      <svg class="pp-play" viewBox="0 0 20 20"><path d="M5 4.2v11.6c0 .8.9 1.3 1.6.8l9-5.8c.6-.4.6-1.2 0-1.6l-9-5.8C5.9 2.9 5 3.4 5 4.2z"/></svg>
+      <svg class="pp-rew" viewBox="0 0 23 23"><path d="M11.2 17.3V5.8L3 11.5l8.2 5.8zm.6-5.8 8.2 5.8V5.8l-8.2 5.7z"/></svg>
+    </div>
     <div class="pp-body"><p class="pp-title poppins"></p><p class="pp-tag questrial"></p>
     <a class="pp-link questrial" data-page><span>detailed case study</span>${ARROW}</a>
     <p class="pp-desc poppins"></p></div>`;

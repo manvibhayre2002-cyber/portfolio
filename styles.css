@@ -450,6 +450,7 @@ html.loading .project { opacity: 0; }
 .project .swatch { overflow: hidden; }
 .project .art { position: absolute; left: 0; top: 0; width: 416px; height: 228px; transform-origin: 50% 0; transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
 .project .art img { position: absolute; }
+.project .art .crop { position: absolute; overflow: hidden; }
 .project:hover .art, .project:focus-visible .art { transform: scale(.737); }
 @media (hover: none) { .project .art { transform: scale(.737); } }
 html.stack .project .art, .ph-list .project .art { transform-origin: 0 0; transform: translate(var(--ax, 0px), 0) scale(var(--ak, 1)) !important; transition: none; }
@@ -937,6 +938,24 @@ html.pp-open .pp { clip-path: inset(0 0 0 0); visibility: visible; transition: c
 .pp > * { transition: opacity .25s ease .3s, transform .35s ease .3s; }
 html:not(.pp-open) .pp > *, .pp.swap > * { opacity: 0; transform: translateY(8px); transition-delay: 0s; }
 .pp-video { position: absolute; left: 34px; top: 35px; width: 898px; height: 411px; background: #f3f3f1; }
+/* laptop: camera-shaped window (Figma home 541:68700 — body 35,205 963×590, tabs 68,187 224×36 and 902,188 66×36) */
+.pp-tab, .pp-ctrl { display: none; }
+html:not(.phone):not(.stack) .pp { top: 187px; left: 35px; width: 963px; height: 608px; background: transparent; }
+html:not(.phone):not(.stack) .pp::before { content: ''; position: absolute; left: 0; right: 0; top: 18px; bottom: 0; background: var(--pp); transition: background-color .35s ease; }
+html:not(.phone) .pp-tab { display: block; position: absolute; top: 0; height: 36px; background: var(--pp); border-radius: 4.5px 4.5px 0 0; transition: background-color .35s ease; }
+html:not(.phone) .pp > .pp-tab { opacity: 1; transform: none; }
+html:not(.phone):not(.stack) .pp-tab1 { left: 33px; width: 224px; }
+html:not(.phone):not(.stack) .pp-tab2 { left: 867px; top: 1px; width: 66px; }
+html:not(.phone):not(.stack) .pp-video { left: 33px; top: 53px; width: 896px; height: 359px; }
+html:not(.phone) .pp-ctrl { display: block; position: absolute; left: 0; top: 0; }
+.pp-ctrl svg { position: absolute; fill: currentColor; }
+.pp-pause { left: 803px; top: 438px; width: 15px; height: 15px; }
+.pp-play { left: 855px; top: 435px; width: 20px; height: 20px; }
+.pp-rew { left: 908px; top: 434px; width: 23px; height: 23px; }
+html:not(.phone):not(.stack) .pp-title { left: 33px; top: 480px; }
+html:not(.phone):not(.stack) .pp-tag { left: 33px; top: 511px; }
+html:not(.phone):not(.stack) .pp-link { left: 799px; top: 511px; }
+html:not(.phone):not(.stack) .pp-desc { left: 32px; top: 550px; }
 .pp-body { position: absolute; inset: 0; pointer-events: none; }
 .pp-body > * { position: absolute; pointer-events: auto; line-height: normal; }
 .pp-title { left: 34px; top: 462px; font-size: 16.775px; }
@@ -968,6 +987,13 @@ html.stack .pp {
   width: min(92vw, 760px); height: auto; padding: 4% 4% 5%; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 14px;
 }
+html.stack .pp { overflow: visible; }
+html.stack.pp-open .pp { clip-path: inset(-20px 0 0 0); }
+html.stack .pp-tab { top: -16px; height: 17px; }
+html.stack .pp-tab1 { left: 3.4%; width: 23.3%; }
+html.stack .pp-tab2 { right: 3.4%; width: 6.9%; }
+html.stack .pp-ctrl { position: relative; display: flex; justify-content: flex-end; gap: 30px; height: 20px; margin: -4px 2px -2px 0; }
+html.stack .pp-ctrl svg { position: relative; left: auto; top: auto; }
 html.stack .pp-video { position: relative; left: auto; top: auto; width: 100%; height: auto; aspect-ratio: 898 / 411; }
 html.stack .pp-body { position: relative; inset: auto; display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; pointer-events: auto; }
 html.stack .pp-body > * { position: relative; left: auto; top: auto; width: auto; }
@@ -1001,3 +1027,19 @@ html.talk .chat-who { pointer-events: auto; }
 .chat-who.set input { display: none; }
 .chat-who.set .who-line { display: block; }
 .chat-who.ph-who { gap: 10px; }
+/* home: the project's line drawing sits inside its circle and grows with it */
+.dot-icon { pointer-events: none; transition: transform .3s cubic-bezier(.3,1.5,.5,1); }
+.dot-icon.crop { overflow: hidden; }
+.dot-icon.crop img { position: absolute; left: 0; top: 0; }
+.dot-icon.on { transform: scale(1.07); }
+/* hover: the icon zooms in and gives a little wiggle (Figma comment on home 433:1594) */
+.dot-icon.hov { animation: icon-wiggle .7s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes icon-wiggle {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.2) rotate(-10deg); }
+  45% { transform: scale(1.2) rotate(8deg); }
+  65% { transform: scale(1.2) rotate(-5deg); }
+  82% { transform: scale(1.2) rotate(2deg); }
+  100% { transform: scale(1.18) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) { .dot-icon.hov { animation: none; transform: scale(1.12); } }
