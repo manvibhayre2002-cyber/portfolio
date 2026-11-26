@@ -474,7 +474,7 @@ html.long { scroll-behavior: smooth; }
 }
 .cs-bar::before {
   content: ''; position: absolute; left: -6000px; right: -6000px; top: 0; height: 147px;
-  background: #fff; opacity: 0; transition: opacity .25s ease, box-shadow .25s ease;
+  background: #f3f3f1; opacity: 0; transition: opacity .25s ease, box-shadow .25s ease;
 }
 .cs-bar { transition: opacity .3s ease; }
 html.leaving .cs-bar { opacity: 0; }
